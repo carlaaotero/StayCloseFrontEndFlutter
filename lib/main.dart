@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/screen/chat.dart';
 import 'package:get/get.dart';
 import 'package:flutter_application_1/Widgets/bottomNavigationBar.dart';
 import 'package:flutter_application_1/screen/logIn.dart';
@@ -33,6 +34,10 @@ class MyApp extends StatelessWidget {
           name: '/home',
           page: () => BottomNavScaffold(child: HomePage()),
         ),
+        GetPage(
+          name: '/chat',
+          page: () => ChatScreen(),
+        )
         /*GetPage(
           name: '/usuarios',
           page: () => BottomNavScaffold(child: UserPage()),
