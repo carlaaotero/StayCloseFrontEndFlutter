@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter_application_1/models/userModel.dart';
 import 'package:dio/dio.dart';
 
@@ -6,8 +5,12 @@ class UserService {
   final String baseUrl = "http://127.0.0.1:3000/api"; // URL de tu backend Web
   //final String baseUrl = "http://10.0.2.2:3000"; // URL de tu backend Android
   final Dio dio = Dio(); // Usa el prefijo 'Dio' para referenciar la clase Dio
+
+  /*//Estados de respuestas
   var statusCode;
-  var data;
+  var data;*/
+  int? statusCode;
+  String? data;
 
   Future<int> logIn(logIn) async {
     print('LogIn');
@@ -51,17 +54,10 @@ class UserService {
   }
 
   Map<String, dynamic> logInToJson(logIn) {
-    return {'username': logIn.username, 
-    'password': logIn.password};
+    return {'username': logIn.username, 'password': logIn.password};
   }
-  
-  
-  
-  
-  
-  
-  
-  //Función createUser
+
+  //Función createUser //Funcion para registras un usuario
   Future<int> createUser(UserModel newUser) async {
     print('createUser');
     print('try');
@@ -103,8 +99,7 @@ class UserService {
     }
   }
 
-
-
+//Funcion de pedir Usuarios
   Future<List<UserModel>> getUsers(int page, int limit) async {
     print('getUsers');
     try {
@@ -125,7 +120,8 @@ class UserService {
     }
   }
 
-  Future<int> EditUser(UserModel newUser, String id) async {
+//Funcion editar usuarios
+  Future<int> editUser(UserModel newUser, String id) async {
     print('createUser');
     print('try');
     //Aquí llamamos a la función request
@@ -166,6 +162,7 @@ class UserService {
     }
   }
 
+//Funcion eliminar usuario
   Future<int> deleteUser(String id) async {
     print('createUser');
     print('try');
@@ -205,5 +202,4 @@ class UserService {
       return -1;
     }
   }
-
 }

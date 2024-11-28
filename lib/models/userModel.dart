@@ -5,25 +5,24 @@ class UserModel with ChangeNotifier {
   String _name;
   String _email;
   String _password;
-  List<dynamic> _actualUbication = []; // en mes de fica dinamic podriem ficar 
+  List<dynamic> _actualUbication = []; // en mes de fica dinamic podriem ficar
   //Ubicació i fer una interficie d'ubicacio que tingui, pais, codi postal, provincia, població, carrer, numero. (el que calgui per fer la funció)
   bool _inHome;
   bool _admin;
   bool _disabled;
 
   // Constructor
-  UserModel(
-      {required String username,
-      required String name,
-      required String email,
-      required String password,
-      required List<dynamic> actualUbication,
-      bool inHome = false,
-      bool admin = true,
-      bool disabled = false, 
-      })
-      : _username = username,
-      _name = name,
+  UserModel({
+    required String username,
+    required String name,
+    required String email,
+    required String password,
+    required List<dynamic> actualUbication,
+    bool inHome = false,
+    bool admin = false, //No todos los usuarios seran admins consultar******
+    bool disabled = false,
+  })  : _username = username,
+        _name = name,
         _email = email,
         _password = password,
         _actualUbication = actualUbication,
@@ -41,8 +40,52 @@ class UserModel with ChangeNotifier {
   bool get admin => _admin;
   bool get disabled => _disabled;
 
+//Setters
+
+  // Setters con notificación para actualizar los datos
+  set username(String value) {
+    _username = value;
+    notifyListeners();
+  }
+
+  set name(String value) {
+    _name = value;
+    notifyListeners();
+  }
+
+  set email(String value) {
+    _email = value;
+    notifyListeners();
+  }
+
+  set password(String value) {
+    _password = value;
+    notifyListeners();
+  }
+
+  set actualUbication(List<dynamic> value) {
+    _actualUbication = value;
+    notifyListeners();
+  }
+
+  set inHome(bool value) {
+    _inHome = value;
+    notifyListeners();
+  }
+
+  set admin(bool value) {
+    _admin = value;
+    notifyListeners();
+  }
+
+  set disabled(bool value) {
+    _disabled = value;
+    notifyListeners();
+  }
+
   // Método para actualizar el usuario
-  void setUser(String username, String name, String email, String password, List<dynamic> actualUbication, bool inHome, bool admin, bool disabled ) {
+  void setUser(String username, String name, String email, String password,
+      List<dynamic> actualUbication, bool inHome, bool admin, bool disabled) {
     _username = username;
     _name = name;
     _email = email;
@@ -61,18 +104,19 @@ class UserModel with ChangeNotifier {
       email: json['email'] ?? 'No especificado',
       password: json['password'] ?? 'Sin contraseña',
       actualUbication: json['actualUbication'] ?? 'ubi desconocida',
-      inHome: json['inHome'],
-      admin: json['admin'],
-      disabled: json['disabled'],
+      inHome: json['inHome'] ?? false,
+      admin: json['admin'] ?? false,
+      disabled: json['disabled'] ?? false,
     );
   }
 
   // Método toJson para convertir una instancia de UserModel en un Map
   Map<String, dynamic> toJson() {
     return {
+      'username': _username,
       'name': _name,
       'email': _email,
-      'password':_password,
+      'password': _password,
       'actualUbication': _actualUbication,
       'inHome': _inHome,
       'admin': _admin,
