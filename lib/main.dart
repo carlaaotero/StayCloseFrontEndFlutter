@@ -8,21 +8,19 @@ import 'package:flutter_application_1/screen/register.dart';
 //import 'package:flutter_application_1/screen/user.dart';
 import 'package:flutter_application_1/screen/home.dart';
 import 'package:flutter_application_1/screen/perfilScreen.dart';
-
+import 'package:flutter_application_1/screen/chatScreen.dart';
 
 void main() {
   runApp(
     MyApp(),
   );
-    Get.put(UserController());  // Esto asegura que el controlador se ponga en el GetX 'depósito'
-
+  Get.put(
+      UserController()); // Esto asegura que el controlador se ponga en el GetX 'depósito'
 }
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-   
-
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       initialRoute: '/login',
@@ -53,11 +51,11 @@ class MyApp extends StatelessWidget {
         GetPage(
           name: '/calendario',
           page: () => BottomNavScaffold(child: PerfilScreen()),
-        ),
+        ), */
         GetPage(
           name: '/chat',
-          page: () => BottomNavScaffold(child: PerfilScreen()),
-        ),*/
+          page: () => BottomNavScaffold(child: ChatScreen()),
+        ),
         GetPage(
           name: '/perfil',
           page: () => BottomNavScaffold(child: PerfilScreen()),
