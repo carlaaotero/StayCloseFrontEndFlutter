@@ -8,7 +8,8 @@ import 'package:flutter_application_1/screen/register.dart';
 //import 'package:flutter_application_1/screen/user.dart';
 import 'package:flutter_application_1/screen/home.dart';
 import 'package:flutter_application_1/screen/perfilScreen.dart';
-import 'package:flutter_application_1/screen/chatScreen.dart';
+import 'package:flutter_application_1/screen/chattscreen.dart';
+import 'package:flutter_application_1/services/socketService.dart';
 
 void main() {
   runApp(
@@ -16,6 +17,7 @@ void main() {
   );
   Get.put(
       UserController()); // Esto asegura que el controlador se ponga en el GetX 'depósito'
+  Get.put(SocketService()); // Registra el servicio de sockets
 }
 
 class MyApp extends StatelessWidget {
