@@ -3,7 +3,8 @@ import 'package:flutter_application_1/models/post.dart';
 import 'package:dio/dio.dart';
 
 class PostService {
-  final String baseUrl = "http://127.0.0.1:3000"; // URL de tu backend web
+  //final String baseUrl = "http://127.0.0.1:3000/api"; // URL de tu backend web
+  final String baseUrl = "http://147.83.7.155:3000/api"; // URL backend a producció
   // final String baseUrl = "http://10.0.2.2:3000"; // URL de tu backend Android
   final Dio dio = Dio(); // Instancia de Dio para realizar solicitudes HTTP
   var statusCode;
@@ -15,7 +16,7 @@ class PostService {
     try {
       // Enviar solicitud POST para crear una nueva experiencia
       Response response = await dio.post(
-        '$baseUrl/api/posts',
+        '$baseUrl/posts',
         data: newPost.toJson(),
       );
 
@@ -50,7 +51,7 @@ class PostService {
     print('getPosts');
     try {
       // Enviar solicitud GET para obtener las experiencias
-      var res = await dio.get('$baseUrl/api/posts');
+      var res = await dio.get('$baseUrl/posts');
       print(res);
       List<dynamic> responseData = res.data;
       print(responseData);
@@ -72,7 +73,7 @@ class PostService {
     try {
       // Enviar solicitud PUT para actualizar una experiencia
       Response response = await dio.put(
-        '$baseUrl/api/posts/$id',
+        '$baseUrl/posts/$id',
         data: updatedPost.toJson(),
       );
 
@@ -107,7 +108,7 @@ Future<int> deletePostById(String id) async {
   print('deletePostById');
   try {
     // Enviar solicitud DELETE utilizando el id como parámetro en la URL
-    Response response = await dio.delete('$baseUrl/api/posts/$id');  // Usamos el id en la URL
+    Response response = await dio.delete('$baseUrl/posts/$id');  // Usamos el id en la URL
 
     // Guardar datos de la respuesta
     data = response.data.toString();

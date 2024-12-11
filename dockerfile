@@ -1,45 +1,47 @@
-# Usa una imagen base oficial de Ubuntu
-FROM ubuntu:20.04
+# Environemnt to install flutter and build web
+FROM debian:latest AS build-env
 
-# Establece variables de entorno para que Docker no solicite interacciones del usuario
-ENV DEBIAN_FRONTEND=noninteractive
+# install all needed stuff
+RUN apt-get update
+RUN apt-get install -y curl git unzip
 
-# Instala las dependencias necesarias
-RUN apt-get update && apt-get install -y \
-    wget \
-    git \
-    curl \
-    unzip \
-    xz-utils \
-    zip \
-    libglu1-mesa \
-    && apt-get clean
+# define variables
+ARG FLUTTER_SDK=/usr/local/flutter
+ARG FLUTTER_VERSION=3.24.5
+ARG APP=/app/
 
-# Descarga Flutter SDK
-RUN git clone https://github.com/flutter/flutter.git /flutter
+#clone flutter
+RUN git clone https://github.com/flutter/flutter.git $FLUTTER_SDK
+# change dir to current flutter folder and make a checkout to the specific version
+RUN cd $FLUTTER_SDK && git fetch && git checkout $FLUTTER_VERSION
 
-# Añade Flutter al PATH
-ENV PATH="/flutter/bin:$PATH"
+# setup the flutter path as an enviromental variable
+ENV PATH="$FLUTTER_SDK/bin:$FLUTTER_SDK/bin/cache/dart-sdk/bin:${PATH}"
 
-# Asegura que Flutter esté actualizado
-RUN flutter doctor
+# Start to run Flutter commands
+# doctor to see if all was installes ok
+RUN flutter doctor -v
 
-# Instala los paquetes de Flutter
-RUN flutter precache && \
-    flutter doctor --android-licenses && \
-    flutter doctor
+# create folder to copy source code
+RUN mkdir $APP
+# copy source code to folder
+COPY . $APP
+# stup new folder as the working directory
+WORKDIR $APP
 
-# Crea un directorio de trabajo para la aplicación
-WORKDIR /app
-
-# Copia los archivos del proyecto a la imagen
-COPY . /app
-
-# Instala las dependencias del proyecto
+# Run build: 1 - clean, 2 - pub get, 3 - build web
+RUN flutter clean
 RUN flutter pub get
+RUN flutter build web
 
-# Construye la aplicación en modo release (puedes cambiar a debug si es necesario)
-RUN flutter build apk --release
+# once heare the app will be compiled and ready to deploy
 
-# Establece el comando por defecto al iniciar el contenedor
-CMD ["flutter", "doctor"]
+# use nginx to deploy
+FROM nginx:1.25.2-alpine
+
+# copy the info of the builded web app to nginx
+COPY --from=build-env /app/build/web /usr/share/nginx/html
+
+# Expose and run nginx
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
