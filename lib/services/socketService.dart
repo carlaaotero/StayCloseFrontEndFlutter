@@ -52,11 +52,12 @@ class SocketService extends GetxService {
     }
   }
 
-  // Método para enviar un mensaje al servidor
-  void sendMessage(String message, String sender) {
+  // Método para enviar un mensaje privado
+  void sendPrivateMessage(String message, String sender, String recipient) {
     final data = {
       'content': message,
       'sender': sender,
+      'recipient': recipient, // Especifica el destinatario
     };
 
     _socket.emit('message', data); // Emitir evento al servidor

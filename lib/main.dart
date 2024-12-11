@@ -56,7 +56,11 @@ class MyApp extends StatelessWidget {
         ), */
         GetPage(
           name: '/chat',
-          page: () => BottomNavScaffold(child: ChatScreen()),
+          page: () => BottomNavScaffold(
+              child: ChatScreen(
+            currentUser: 'user1', // Cambia esto según tu lógica
+            recipient: 'user2', // Cambia esto según tu lógica
+          )),
         ),
         GetPage(
           name: '/perfil',
