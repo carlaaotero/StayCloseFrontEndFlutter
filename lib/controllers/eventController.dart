@@ -30,7 +30,7 @@ class EventController extends GetxController {
     _loadId();
   }
 
-   // Método para cargar el id desde SharedPreferences
+   // Mètode per carregar el id des de SharedPreferences
   void _loadId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String id = prefs.getString('user_id') ?? '';  

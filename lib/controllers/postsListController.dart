@@ -10,59 +10,58 @@ class PostsListController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchPosts();  // Llamada a fetchExperiences al inicializar el controlador
+    fetchPosts();  // Trucada a fetchExperiences al inicialitzar el controlador
   }
 
-  // Método para obtener las experiencias
+  // Mètode per obtenir els posts
   Future<void> fetchPosts() async {
     try {
-      isLoading(true);  // Establecemos el estado de carga a true
+      isLoading(true); 
       var post = await postService.getPosts();
       
       if (post != null) {
-        postList.assignAll(post); // Asignamos las experiencias a la lista
+        postList.assignAll(post); // Assignem els posts a la llista
       }
     } catch (e) {
       print("Error fetching experiences: $e");
     } finally {
-      isLoading(false);  // Establecemos el estado de carga a false una vez que termine
+      isLoading(false); 
     }
   }
 
-  // Método para editar una experiencia
-  Future<void> editPost(String id, PostModel updatedPost) async {  // Cambié a PostModel
+  // Mètode per editar un post
+  Future<void> editPost(String id, PostModel updatedPost) async {  
     try {
-      isLoading(true);  // Establecemos el estado de carga a true
+      isLoading(true); 
       var statusCode = await postService.editPost(updatedPost, id);
       if (statusCode == 201) {
         Get.snackbar('Éxito', 'Post actualizado con éxito');
-        await fetchPosts();  // Recargamos la lista de experiencias después de editar
+        await fetchPosts();  // Recarreguem la llista de posts desprès d'editar
       } else {
         Get.snackbar('Error', 'Error al actualizar la experiencia');
       }
     } catch (e) {
       print("Error editing experience: $e");
     } finally {
-      isLoading(false);  // Establecemos el estado de carga a false una vez que termine
+      isLoading(false);  
     }
   }
 
-// Método para eliminar un post utilizando el id
+// Mètode per eliminar un post utilitzant l'ID
 Future<void> postToDelete(String postId) async {
   try {
-    isLoading(true);  // Establecemos el estado de carga a true
+    isLoading(true);  
 
-    // Buscamos el post en la lista local utilizando el id
+    // Busquem el pots en la llista local utilitzant l'ID
     var postToDelete = postList.firstWhere(
-      (post) => post.id == postId,  // Usamos 'id' para buscar el post
-      //orElse: () => null,  // Si no se encuentra, retornamos null
+      (post) => post.id == postId,        
     );
 
     if (postToDelete != null) {
-      // Llamada al servicio para eliminar el post utilizando el id
-      var statusCode = await postService.deletePostById(postToDelete.id);  // Usamos 'id' para eliminar
+      // Trucada al servei per elimiar el post utilitzant l'ID
+      var statusCode = await postService.deletePostById(postToDelete.id);  
 
-      if (statusCode == 200) {  // Aseguramos que el código de éxito sea 200
+      if (statusCode == 200) {  // Assegurem que el codi sigui 200
         Get.snackbar('Éxito', 'Post eliminado con éxito');
         fetchPosts();  // Recargamos la lista de posts después de eliminar
       } else {

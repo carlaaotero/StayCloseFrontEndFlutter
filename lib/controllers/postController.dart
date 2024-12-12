@@ -20,41 +20,41 @@ class PostController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _loadUsername();  // Cargar el username cuando se inicializa el controlador
+    _loadUsername();  // Carregar el username quan s'inicialitza el controlador
   }
 
 
-  // Método para cargar el username desde SharedPreferences
+  // Mètode per carregar l'username des de SharedPreferences
   void _loadUsername() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String username = prefs.getString('username') ?? '';  // Recupera el username o un string vacío
-    ownerController.text = username;  // Rellenar el campo de autor
+    String username = prefs.getString('username') ?? '';  // Recupera l'username o un string buit
+    ownerController.text = username;  // Omplir el camp d'autor
   }
 
-  // Método para crear una nueva experiencia
-  Uint8List? selectedImage; // Bytes de la imagen seleccionada
-  var uploadedImageUrl = ''.obs; // URL de la imagen subida a Cloudinary
+  // Mètode per crear un nou post
+  Uint8List? selectedImage; // Bytes de la imatge seleccionada
+  var uploadedImageUrl = ''.obs; // URL de la imatge pujada a Cloudinary
 
-  // Seleccionar imagen desde el dispositivo
+  // Seleccionar imatge des del dispositiu
   Future<void> pickImage() async {
     try {
       Uint8List? imageBytes = await ImagePickerWeb.getImageAsBytes();
       if (imageBytes != null) {
         selectedImage = imageBytes;
         uploadedImageUrl.value = ''; // Reinicia la URL de Cloudinary
-        update(); // Actualiza la UI
-        Get.snackbar('Éxito', 'Imagen seleccionada correctamente');
+        update(); // Actualitza la UI
+        Get.snackbar('Èxit', 'Imatge seleccionada correctament');
       }
     } catch (e) {
-      Get.snackbar('Error', 'No se pudo seleccionar la imagen: $e',
+      Get.snackbar('Error', 'No s\'ha pogut seleccionar la imatge: $e',
           snackPosition: SnackPosition.BOTTOM);
     }
   }
 
-  // Subir imagen a Cloudinary
+  // Pujar imatge a Cloudinary
   Future<void> uploadImageToCloudinary() async {
     if (selectedImage == null) {
-      Get.snackbar('Error', 'Selecciona una imagen primero',
+      Get.snackbar('Error', 'Selecciona una imatge primer',
           snackPosition: SnackPosition.BOTTOM);
       return;
     }
@@ -78,37 +78,37 @@ class PostController extends GetxController {
         var responseData = await response.stream.bytesToString();
         var data = jsonDecode(responseData);
         uploadedImageUrl.value = data['secure_url'];
-        Get.snackbar('Éxito', 'Imagen subida correctamente');
+        Get.snackbar('Èxit', 'Imatge pujada correctament');
       } else {
-        Get.snackbar('Error', 'Falló la subida de la imagen',
+        Get.snackbar('Error', 'Ha fallat la pujada de la imatge',
             snackPosition: SnackPosition.BOTTOM);
       }
     } catch (e) {
-      Get.snackbar('Error', 'Error al subir la imagen: $e',
+      Get.snackbar('Error', 'Error al pujar la imatge: $e',
           snackPosition: SnackPosition.BOTTOM);
     } finally {
       isLoading.value = false;
     }
   }
 
-  // Crear un nuevo post
+  // Crear un nou post
   void createPost() async {
     if (ownerController.text.isEmpty ||
         descriptionController.text.isEmpty ||
         postType.value.isEmpty) {
-      Get.snackbar('Error', 'Todos los campos son obligatorios',
+      Get.snackbar('Error', 'Tots els camps són obligatoris',
           snackPosition: SnackPosition.BOTTOM);
       return;
     }
 
-    // Si la imagen no se ha subido, subirla primero
+    // Si la imatge no s'ha pujat, pujar-la primer
     if (uploadedImageUrl.isEmpty && selectedImage != null) {
       await uploadImageToCloudinary();
     }
 
-    // Verifica si la imagen fue subida con éxito
+    // Verifica si la imatge ha sigut pujada amb èxit
     if (uploadedImageUrl.value.isEmpty) {
-      Get.snackbar('Error', 'La imagen no se subió correctamente.',
+      Get.snackbar('Error', 'La imatge no s\'ha pujat correctament.',
           snackPosition: SnackPosition.BOTTOM);
       return;
     }
@@ -126,13 +126,13 @@ class PostController extends GetxController {
     try {
       final statusCode = await postService.createPost(newPost);
       if (statusCode == 201) {
-        Get.snackbar('Éxito', 'Post creado con éxito');
+        Get.snackbar('Èxit', 'Post creat amb èxit');
         Get.toNamed('/posts');
       } else {
         errorMessage.value = 'Error al crear el post';
       }
     } catch (e) {
-      errorMessage.value = 'Error: No se pudo conectar con la API';
+      errorMessage.value = 'Error: No s\'ha pogut connectar amb l\'API';
     } finally {
       isLoading.value = false;
     }
