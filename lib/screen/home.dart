@@ -38,7 +38,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
   // Función para abrir una llamada de emergencia
   _contactEmergency() async {
-    const emergencyPhoneNumber = 'tel:6399845501';
+    const emergencyPhoneNumber = 'tel:+34 639845501';
     if (await canLaunch(emergencyPhoneNumber)) {
       await launch(emergencyPhoneNumber);
     } else {

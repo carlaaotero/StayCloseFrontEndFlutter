@@ -5,8 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jwt_decoder/jwt_decoder.dart'; // Para decodificar el JWT
 
 class UserService {
-  //final String baseUrl = "http://127.0.0.1:3000/api"; // URL de tu backend Web
-  final String baseUrl = "http://147.83.7.155:3000/api"; // URL del teu backenda producció
+  final String baseUrl = "http://127.0.0.1:3000/api"; // URL de tu backend Web
+  //final String baseUrl = "http://147.83.7.155:3000/api"; // URL del teu backenda producció
   //final String baseUrl = "http://10.0.2.2:3000"; // URL de tu backend Android
   final Dio dio = Dio(); // Usa el prefijo 'Dio' para referenciar la clase Dio
   var statusCode;
