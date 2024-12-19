@@ -14,11 +14,16 @@ import 'package:cloudinary_flutter/cloudinary_context.dart';
 //import 'package:cloudinary_flutter/image/cld_image.dart';
 import 'package:cloudinary_url_gen/cloudinary.dart';
 import 'package:flutter_application_1/screen/calendarScreen.dart'; 
+import 'package:flutter_application_1/services/backgroundServices.dart';
 
 
-void main() {
+void main() async {
   CloudinaryContext.cloudinary = Cloudinary.fromCloudName(cloudName: "djen7vqby");
   Get.put(UserController());  // Esto asegura que el controlador se ponga en el GetX 'depósito'
+
+  // Inicialitzar el servei en segon pla i el treball
+  await BackgroundService.initialize();
+
   runApp(
     MyApp(),
   );

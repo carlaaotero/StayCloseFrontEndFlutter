@@ -59,6 +59,13 @@ dependencies:
   # Paquet llibreria geocoding per passar d'una adreça a coordenades
   geocoding: ^2.0.4
 
+
+  #Paquets per background per la geolocalització i notificacions
+  geolocator: ^10.0.0
+  flutter_background: ^1.0.0
+  flutter_local_notifications: ^18.0.0
+  workmanager: ^0.5.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
