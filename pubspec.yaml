@@ -58,6 +58,13 @@ dependencies:
 
   # Paquet llibreria geocoding per passar d'una adreça a coordenades
   geocoding: ^2.0.4
+  
+  #Permet agafar la ubi del usuari
+  google_maps_flutter: ^2.1.1
+  location: ^4.3.0
+  geolocator: ^10.1.0
+
+  
 
 dev_dependencies:
   flutter_test:

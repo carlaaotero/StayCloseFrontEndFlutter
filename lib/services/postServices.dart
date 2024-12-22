@@ -3,8 +3,8 @@ import 'package:flutter_application_1/models/post.dart';
 import 'package:dio/dio.dart';
 
 class PostService {
-  //final String baseUrl = "http://127.0.0.1:3000"; // URL de tu backend web
-  final String baseUrl = "http://147.83.7.155:3000"; // URL del teu backenda producció
+  final String baseUrl = "http://127.0.0.1:3000"; // URL de tu backend web
+  //final String baseUrl = "http://147.83.7.155:3000"; // URL del teu backenda producció
   // final String baseUrl = "http://10.0.2.2:3000"; // URL de tu backend Android
   final Dio dio = Dio(); // Instancia de Dio para realizar solicitudes HTTP
   var statusCode;

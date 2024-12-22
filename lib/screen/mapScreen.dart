@@ -7,7 +7,7 @@ import 'package:flutter_application_1/models/ubi.dart';
 
 class MapScreen extends StatelessWidget {
   final UbiController ubiController = Get.put(UbiController());
-  RxList<UbiModel> selectedUbications = RxList<UbiModel>([]);
+  Rx<UbiModel?> hoveredUbi = Rx<UbiModel?>(null); // Per mostrar detalls d'un únic marcador
 
   @override
   Widget build(BuildContext context) {
@@ -27,11 +27,17 @@ class MapScreen extends StatelessWidget {
 
         return Stack(
           children: [
-            // Mapa
             FlutterMap(
               options: MapOptions(
-                center: LatLng(41.382395521312176, 2.1567611541534366),
+                center: ubiController.userLocation.value ??
+                    LatLng(41.382395521312176, 2.1567611541534366),
                 zoom: 13.0,
+                onPositionChanged: (position, hasGesture) {
+                  // Reinicialitzar l'element "hoveredUbi" quan es mogui el mapa
+                  if (hasGesture) {
+                    hoveredUbi.value = null;
+                  }
+                },
               ),
               children: [
                 TileLayer(
@@ -47,13 +53,11 @@ class MapScreen extends StatelessWidget {
                         ubi.ubication['longitud'] ?? 2.1567611541534366;
 
                     return Marker(
+                      key: ValueKey('${ubi.ubication['latitud']}_${ubi.ubication['longitud']}'),
                       point: LatLng(latitude, longitude),
-                      builder: (ctx) => GestureDetector(
-                        onTap: () {
-                          if (!selectedUbications.contains(ubi)) {
-                            selectedUbications.add(ubi);
-                          }
-                        },
+                      builder: (ctx) => MouseRegion(
+                        onEnter: (_) => hoveredUbi.value = ubi,
+                        onExit: (_) => hoveredUbi.value = null,
                         child: Icon(
                           Icons.place,
                           color: const Color.fromARGB(255, 133, 160, 160),
@@ -63,15 +67,27 @@ class MapScreen extends StatelessWidget {
                     );
                   }).toList(),
                 ),
+                // Cercle per la ubicació de l'usuari
+                if (ubiController.userLocation.value != null)
+                  CircleLayer(
+                    circles: [
+                      CircleMarker(
+                        point: ubiController.userLocation.value!,
+                        color: Colors.purple.withOpacity(0.7),
+                        radius: 10.0,
+                      ),
+                    ],
+                  ),
               ],
             ),
 
-            // Mostra les caixes per a les ubicacions seleccionades
-            ...selectedUbications.map((ubi) {
-              int index = selectedUbications.indexOf(ubi);
+            // Mostra una caixa amb els detalls de la ubicació seleccionada amb "hover"
+            Obx(() {
+              final ubi = hoveredUbi.value;
+              if (ubi == null) return const SizedBox.shrink();
               return Positioned(
-                right: 16.0,
-                top: 16.0 + index * 160.0,
+                left: 16.0,
+                top: 16.0,
                 child: Container(
                   width: 220.0,
                   padding: const EdgeInsets.all(12.0),
@@ -89,28 +105,13 @@ class MapScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Detalls',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              selectedUbications.remove(ubi);
-                            },
-                            child: const Icon(
-                              Icons.close,
-                              size: 20.0,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ],
+                      Text(
+                        'Detalls',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -130,6 +131,7 @@ class MapScreen extends StatelessWidget {
                         style:
                             const TextStyle(fontSize: 14, color: Colors.black),
                       ),
+                      const SizedBox(height: 4),
                       Text(
                         'Adreça: ${ubi.address}',
                         style:
@@ -145,7 +147,7 @@ class MapScreen extends StatelessWidget {
                   ),
                 ),
               );
-            }).toList(),
+            }),
           ],
         );
       }),
@@ -160,6 +162,7 @@ class MapScreen extends StatelessWidget {
   }
 
   void _showAddUbiDialog(BuildContext context) {
+    // Funció per afegir una ubicació
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -242,17 +245,15 @@ class MapScreen extends StatelessWidget {
                     ),
                     keyboardType: TextInputType.number,
                   ),
-                  const SizedBox(height: 20),
-                  Center(
+                  const SizedBox(height: 16),
+                  Align(
+                    alignment: Alignment.bottomRight,
                     child: ElevatedButton(
-                      onPressed: () async {
-                        await ubiController.createUbi();
-                        Navigator.of(context).pop();
+                      onPressed: () {
+                        ubiController.createUbi();
+                        Navigator.pop(context);
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF89AFAF),
-                      ),
-                      child: const Text('Crear Ubicació'),
+                      child: const Text('Afegir'),
                     ),
                   ),
                 ],

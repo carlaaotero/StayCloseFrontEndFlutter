@@ -4,6 +4,11 @@ import 'package:get/get.dart';
 import 'package:flutter_application_1/models/ubi.dart';
 import 'package:flutter_application_1/services/ubiServices.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+//Ubi user
+import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
+
+
 
 
 class UbiController extends GetxController {
@@ -11,6 +16,7 @@ class UbiController extends GetxController {
   var ubis = <UbiModel>[].obs;
   var isLoading = false.obs;
   var errorMessage = ''.obs;
+  Rx<LatLng?> userLocation = Rx<LatLng?>(null); // Ubicació de l'usuari
 
 
   // Controladors per al formulari de creació i edició
@@ -22,10 +28,14 @@ class UbiController extends GetxController {
   TextEditingController comentariController = TextEditingController();
   TextEditingController horariController = TextEditingController();
 
+  
+
   @override
   void onInit() {
     super.onInit();
     fetchUbis();
+    //getUserLocation();
+    fetchUserLocation();
   }
 
   //Obtenir totes les ubicacions
@@ -152,5 +162,59 @@ class UbiController extends GetxController {
     horariController.clear();
 
   }
+
+  // Funció per obtenir la ubicació actual
+  /*Future<void> getUserLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        Get.snackbar("Error", "El servei de localització està desactivat");
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          Get.snackbar("Error", "El permís de localització ha estat denegat");
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        Get.snackbar(
+          "Error",
+          "El permís de localització ha estat denegat permanentment",
+        );
+        return;
+      }
+
+      Position position = await Geolocator.getCurrentPosition();
+      userLocation.value = LatLng(position.latitude, position.longitude);
+    } catch (e) {
+      Get.snackbar("Error", "No s'ha pogut obtenir la ubicació: $e");
+    }
+  }*/
+
+  // Obtenir la ubicació actual de l'usuari
+  Future<void> fetchUserLocation() async {
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.whileInUse ||
+          permission == LocationPermission.always) {
+        Position position = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high);
+        userLocation.value = LatLng(position.latitude, position.longitude);
+      }
+    } catch (e) {
+      print("Error obtenint la ubicació de l'usuari: $e");
+    }
+  }
+
 
 }
