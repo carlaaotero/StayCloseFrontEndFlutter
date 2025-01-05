@@ -127,10 +127,12 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
+import '../models/message_model.dart';
 
 class ChatService {
-  final String baseUrl = 'http://localhost:3000/api';
+  final String baseUrl = 'http://127.0.0.1:3000/api';
 
+  // Obtener el token desde SharedPreferences
   Future<String> getToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('authToken');
@@ -151,11 +153,15 @@ class ChatService {
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
       return data.map((json) => UserModel.fromJson(json)).toList();
+    } else if (response.statusCode == 401) {
+      throw Exception('No autorizado. Por favor verifica tu token.');
     } else {
-      throw Exception('Error al obtener usuarios conectados');
+      throw Exception(
+          'Error al obtener usuarios conectados. Código: ${response.statusCode}');
     }
   }
 
+  // Obtener grupos
   Future<List<dynamic>> getGroups() async {
     final token = await getToken();
     final response = await http.get(
@@ -167,6 +173,54 @@ class ChatService {
       return json.decode(response.body);
     } else {
       throw Exception('Error al obtener grupos');
+    }
+  }
+
+  // Obtener mensajes de una conversación o grupo
+  Future<List<MessageModel>> getMessages(String conversationId,
+      {bool isGroup = false}) async {
+    final token = await getToken();
+    final endpoint = isGroup
+        ? '$baseUrl/messages/group/$conversationId'
+        : '$baseUrl/messages/conversation/$conversationId';
+
+    final response = await http.get(
+      Uri.parse(endpoint),
+      headers: {'Authorization': token},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> messagesJson = json.decode(response.body);
+      return messagesJson.map((json) => MessageModel.fromJson(json)).toList();
+    } else if (response.statusCode == 401) {
+      throw Exception('No autorizado. Por favor verifica tu token.');
+    } else {
+      throw Exception(
+          'Error al obtener mensajes. Código: ${response.statusCode}');
+    }
+  }
+
+  // Enviar un mensaje
+  Future<void> sendMessage(String senderId, String? receiverId, String? groupId,
+      String content) async {
+    final token = await getToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/messages/send'),
+      headers: {
+        'Authorization': token,
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({
+        'senderId': senderId,
+        'receiverId': receiverId,
+        'groupId': groupId,
+        'content': content,
+      }),
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception(
+          'Error al enviar el mensaje. Código: ${response.statusCode}');
     }
   }
 }
