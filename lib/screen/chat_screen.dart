@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../services/chat_service.dart';
 import 'conversation_screen.dart';
+import '../services/websocket_service.dart';
 
 class ChatScreen extends StatefulWidget {
   @override
