@@ -1,6 +1,5 @@
 import 'package:cloudinary_flutter/cloudinary_object.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/screen/chat_screen.dart';
 import 'package:get/get.dart';
 import 'package:flutter_application_1/controllers/userController.dart';
 import 'package:flutter_application_1/Widgets/bottomNavigationBar.dart';
@@ -16,6 +15,7 @@ import 'package:cloudinary_flutter/cloudinary_context.dart';
 import 'package:cloudinary_url_gen/cloudinary.dart';
 import 'package:flutter_application_1/screen/calendarScreen.dart';
 import 'screen/conversation_screen.dart';
+import 'package:flutter_application_1/screen/chat_screen.dart';
 
 void main() {
   CloudinaryContext.cloudinary =

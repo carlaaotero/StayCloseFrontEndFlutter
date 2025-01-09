@@ -445,6 +445,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
 
 */
 
+/* //08/01
+
 import 'package:flutter/material.dart';
 import '../services/websocket_service.dart';
 import '../models/message_model.dart';
@@ -521,6 +523,112 @@ class _ConversationScreenState extends State<ConversationScreen> {
                 final message = messages[index];
                 final isCurrentUser = message.senderId == 'userId';
 
+                return Align(
+                  alignment: isCurrentUser
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
+                  child: Container(
+                    margin: EdgeInsets.all(8),
+                    padding: EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: isCurrentUser ? Colors.blue : Colors.grey,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(message.content),
+                  ),
+                );
+              },
+            ),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: messageController,
+                  decoration:
+                      InputDecoration(hintText: 'Escribe un mensaje...'),
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.send),
+                onPressed: sendMessage,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+*/
+
+import 'package:flutter/material.dart';
+import '../services/websocket_service.dart';
+import '../models/message_model.dart';
+
+class ConversationScreen extends StatefulWidget {
+  final String conversationId;
+  final bool isGroup;
+
+  ConversationScreen({required this.conversationId, required this.isGroup});
+
+  @override
+  _ConversationScreenState createState() => _ConversationScreenState();
+}
+
+class _ConversationScreenState extends State<ConversationScreen> {
+  late WebSocketService webSocketService;
+  final TextEditingController messageController = TextEditingController();
+  List<MessageModel> messages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    webSocketService = WebSocketService('ws://localhost:8080');
+    webSocketService.messages.listen((data) {
+      setState(() {
+        messages.add(MessageModel.fromJson(data));
+      });
+    });
+    webSocketService.notifyStatus('online');
+  }
+
+  void sendMessage() async {
+    if (messageController.text.trim().isEmpty) return;
+
+    final content = messageController.text;
+    webSocketService.sendMessage({
+      'type': 'message',
+      'receiverId': widget.isGroup ? null : widget.conversationId,
+      'groupId': widget.isGroup ? widget.conversationId : null,
+      'content': content,
+    });
+
+    messageController.clear();
+  }
+
+  @override
+  void dispose() {
+    webSocketService.notifyStatus('offline');
+    webSocketService.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.isGroup ? 'Grupo' : 'Chat'),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              itemCount: messages.length,
+              itemBuilder: (context, index) {
+                final message = messages[index];
+                final isCurrentUser = message.senderId ==
+                    'user_id'; // Reemplazar con el ID del usuario logueado
                 return Align(
                   alignment: isCurrentUser
                       ? Alignment.centerRight

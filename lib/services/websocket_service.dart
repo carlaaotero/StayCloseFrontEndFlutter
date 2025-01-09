@@ -64,7 +64,7 @@ class WebSocketService {
     _channel.sink.close();
   }
 }
-*/
+//06/01
 import 'dart:convert';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -133,6 +133,147 @@ class WebSocketService {
   }
 
   // Cerrar conexión WebSocket
+  void close() {
+    try {
+      _channel.sink.close();
+      print("Conexión WebSocket cerrada.");
+    } catch (e) {
+      print("Error al cerrar WebSocket: $e");
+    }
+  }
+}
+
+*/
+
+//07/01
+/*
+
+import 'dart:convert';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class WebSocketService {
+  late final WebSocketChannel _channel;
+
+  WebSocketService(String url) {
+    try {
+      _channel = WebSocketChannel.connect(Uri.parse(url));
+      print("WebSocket conectado a $url");
+    } catch (e) {
+      print("Error al conectar WebSocket: $e");
+    }
+  }
+
+  // Escuchar mensajes del WebSocket
+  Stream<Map<String, dynamic>> get messages => _channel.stream
+      .map((message) => json.decode(message) as Map<String, dynamic>);
+
+  // Enviar mensaje al WebSocket
+  void sendMessage(Map<String, dynamic> message) {
+    try {
+      _channel.sink.add(json.encode(message));
+      print("Mensaje enviado: $message");
+    } catch (e) {
+      print("Error al enviar mensaje: $e");
+    }
+  }
+
+  // Notificar estado del usuario (online/offline)
+  Future<void> notifyStatus(String status) async {
+    final String? userId = await getUserId();
+    if (userId == null) {
+      print("No se encontró userId en SharedPreferences.");
+      return;
+    }
+
+    sendMessage({
+      'type': 'status',
+      'userId': userId,
+      'status': status,
+    });
+  }
+
+  // Obtener user_id desde SharedPreferences
+  Future<String?> getUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('user_id');
+  }
+
+  // Cerrar conexión WebSocket
+  void close() {
+    try {
+      _channel.sink.close();
+      print("Conexión WebSocket cerrada.");
+    } catch (e) {
+      print("Error al cerrar WebSocket: $e");
+    }
+  }
+}
+
+*/
+
+import 'dart:convert';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class WebSocketService {
+  late final WebSocketChannel _channel;
+
+  WebSocketService(String url) {
+    try {
+      _channel = WebSocketChannel.connect(Uri.parse(url));
+      print("WebSocket conectado a $url");
+    } catch (e) {
+      print("Error al conectar WebSocket: $e");
+    }
+  }
+
+  // Escuchar mensajes
+  Stream<Map<String, dynamic>> get messages => _channel.stream
+      .map((message) => json.decode(message)); //as Map<String, dynamic>);
+
+  // Enviar mensaje al web socket
+  void sendMessage(Map<String, dynamic> message) {
+    try {
+      _channel.sink.add(json.encode(message));
+      print("Mensaje enviado: $message");
+    } catch (e) {
+      print("Error al enviar mensaje: $e");
+    }
+  }
+
+  // Notificar estado de usuario (online/offline)
+  /*
+  Future<void> notifyStatus(String status) async {
+    final String? userId = await getUserId();
+    if (userId == null) {
+      print("Usuario no logueado./No se encontró userId en SharedPreferences ");
+      return;
+    }
+    sendMessage({
+      'type': 'status',
+      'userId': userId,
+      'status': status,
+    });
+  }
+  */
+
+  Future<void> notifyStatus(String status) async {
+    final String? userId = await SharedPreferences.getInstance()
+        .then((prefs) => prefs.getString('user_id'));
+    if (userId != null) {
+      sendMessage({'type': 'status', 'userId': userId, 'status': status});
+    }
+  }
+
+  //Recuperar el user_id desde SharedPreferences
+  Future<String?> getUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('user_id');
+  }
+
+  //Cerrar conexion WebSocket
+
   void close() {
     try {
       _channel.sink.close();

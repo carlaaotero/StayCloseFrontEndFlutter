@@ -65,7 +65,8 @@ class UserModel with ChangeNotifier {
       bool inHome,
       bool admin,
       bool disabled,
-      String status) {
+      String status,
+      bool isGroup) {
     _username = username;
     _name = name;
     _email = email;
@@ -74,6 +75,7 @@ class UserModel with ChangeNotifier {
     _inHome = inHome;
     _disabled = disabled;
     _status = status;
+    _isGrup = isGroup;
     notifyListeners();
   }
 

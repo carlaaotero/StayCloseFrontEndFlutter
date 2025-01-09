@@ -487,11 +487,15 @@ class UserService {
 
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
+        await prefs.setString('authToken', token); //clave correcta
         await prefs.setString('user_id', decodedToken['id'] ?? '');
 
         // Actualizar token en Dio
         dio.options.headers['Authorization'] = 'Bearer $token';
         print('Token y datos guardados en SharedPreferences.');
+
+        //Notificacion del online del usuario al backend
+        await dio.put('/user/updateOnlineStatus', data: {'online': true});
 
         return 200;
       } else {
@@ -506,7 +510,20 @@ class UserService {
 
   // Método para cerrar sesión
   Future<void> logOut() async {
+    /*
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    print('Sesión cerrada y datos eliminados de SharedPreferences.');
+
+    */
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userId = prefs.getString('user_id');
+
+    // Notificar al backend que el usuario está offline
+    if (userId != null) {
+      await dio.put('/user/updateOnlineStatus', data: {'online': false});
+    }
     await prefs.clear();
     print('Sesión cerrada y datos eliminados de SharedPreferences.');
   }
@@ -578,6 +595,26 @@ class UserService {
     } catch (e) {
       print('Error en deleteUser: $e');
       return -1;
+    }
+  }
+
+  // Actualizar el estado online del usuario
+  Future<void> updateOnlineStatus(bool online) async {
+    try {
+      final token = await _getToken();
+      final response = await dio.put(
+        '/user/updateOnlineStatus',
+        data: {'online': online},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        print("Estado online actualizado correctamente.");
+      } else {
+        print("Error al actualizar el estado online: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error al realizar la solicitud de estado online: $e");
     }
   }
 }

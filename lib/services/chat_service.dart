@@ -214,6 +214,8 @@ class ChatService {
   }
 
 */
+/*
+//07/01
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -318,6 +320,279 @@ class ChatService {
       return json.decode(response.body);
     } else {
       throw Exception('Error al obtener grupos');
+    }
+  }
+}
+
+*/
+
+//08/01/
+
+/*
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../models/message_model.dart';
+import '../models/user.dart';
+
+class ChatService {
+  final String baseUrl = 'http://localhost:3000/api';
+
+  // Obtener el token desde SharedPreferences
+  Future<String> getToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('authToken');
+    if (token == null) {
+      throw Exception('Token no encontrado. Inicia sesión nuevamente.');
+    }
+    return 'Bearer $token';
+  }
+
+  // Obtener el ID del usuario logueado
+  Future<String?> getCurrentUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('user_id');
+  }
+
+  // Obtener usuarios en línea
+  Future<List<UserModel>> getOnlineUsers() async {
+    /*
+    final token = await getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/user/online'),
+      headers: {'Authorization': token},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((json) => UserModel.fromJson(json)).toList();
+    } else if (response.statusCode == 401) {
+      throw Exception('Token expirado o no autorizado.');
+    } else {
+      throw Exception('Error al obtener usuarios conectados.');
+    }
+    */
+    /*
+    try {
+      final token = await getToken();
+      final response = await http.get(
+        Uri.parse('$baseUrl/user/online'),
+        headers: {'Authorization': token},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((json) => UserModel.fromJson(json)).toList();
+      } else if (response.statusCode == 401) {
+        throw Exception('Token expirado o no autorizado.');
+      } else {
+        throw Exception('Error al obtener usuarios conectados.');
+      }
+    } catch (e) {
+      throw Exception('Error al conectar con el servidor: $e');
+    }
+    */
+
+    final token = await getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/user/online'),
+      headers: {'Authorization': token},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((json) => UserModel.fromJson(json)).toList();
+    } else {
+      throw Exception('Error al obtener usuarios conectados.');
+    }
+  }
+
+  /*
+
+  // Obtener mensajes de una conversación
+  Future<List<MessageModel>> getMessages(String conversationId,
+      {bool isGroup = false}) async {
+    final token = await getToken();
+    final endpoint = isGroup
+        ? '$baseUrl/messages/group/$conversationId'
+        : '$baseUrl/messages/conversation/$conversationId';
+
+    final response = await http.get(
+      Uri.parse(endpoint),
+      headers: {'Authorization': token},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> messagesJson = json.decode(response.body);
+      return messagesJson.map((json) => MessageModel.fromJson(json)).toList();
+    } else if (response.statusCode == 401) {
+      throw Exception('Token expirado o no autorizado.');
+    } else {
+      throw Exception('Error al obtener los mensajes.');
+    }
+  }
+  */
+  Future<List<MessageModel>> getMessages(String conversationId) async {
+    final token = await getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/messages/conversation/$conversationId'),
+      headers: {'Authorization': token},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> messagesJson = json.decode(response.body);
+      return messagesJson.map((json) => MessageModel.fromJson(json)).toList();
+    } else {
+      throw Exception('Error al obtener los mensajes.');
+    }
+  }
+
+/*
+  // Enviar un mensaje
+  Future<void> sendMessage(
+      String content, String? receiverId, String? groupId) async {
+    final String? senderId = await getCurrentUserId();
+    if (senderId == null) {
+      throw Exception('Usuario no logueado.');
+    }
+
+    final token = await getToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/messages/send'),
+      headers: {
+        'Authorization': token,
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({
+        'senderId': senderId,
+        'receiverId': receiverId,
+        'groupId': groupId,
+        'content': content,
+      }),
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception('Error al enviar el mensaje.');
+    }
+  }
+  */
+  Future<void> sendMessage(
+      String content, String? receiverId, String? groupId) async {
+    final String? senderId = await SharedPreferences.getInstance()
+        .then((prefs) => prefs.getString('user_id'));
+    final token = await getToken();
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/messages/send'),
+      headers: {
+        'Authorization': token,
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({
+        'senderId': senderId,
+        'receiverId': receiverId,
+        'groupId': groupId,
+        'content': content,
+      }),
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception('Error al enviar el mensaje.');
+    }
+  }
+}
+*/
+
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../models/message_model.dart';
+import '../models/user.dart';
+
+class ChatService {
+  final String baseUrl = 'http://localhost:3000/api';
+
+  // Obtener el token desde SharedPreferences
+  Future<String> getToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('authToken');
+    if (token == null) {
+      throw Exception('Token no encontrado. Inicia sesión nuevamente.');
+    }
+    return 'Bearer $token';
+  }
+
+  // Obtener usuarios en línea
+  Future<List<UserModel>> getOnlineUsers() async {
+    final token = await getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/user/online'),
+      headers: {'Authorization': token},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((json) => UserModel.fromJson(json)).toList();
+    } else {
+      throw Exception('Error al obtener usuarios conectados.');
+    }
+  }
+
+  // Obtener grupos
+  Future<List<UserModel>> getGroups() async {
+    final token = await getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/user/groups'),
+      headers: {'Authorization': token},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((json) => UserModel.fromJson(json)).toList();
+    } else {
+      throw Exception('Error al obtener grupos.');
+    }
+  }
+
+  // Obtener mensajes de una conversación
+  Future<List<MessageModel>> getMessages(String conversationId) async {
+    final token = await getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/messages/conversation/$conversationId'),
+      headers: {'Authorization': token},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> messagesJson = json.decode(response.body);
+      return messagesJson.map((json) => MessageModel.fromJson(json)).toList();
+    } else {
+      throw Exception('Error al obtener los mensajes.');
+    }
+  }
+
+  // Enviar un mensaje
+  Future<void> sendMessage(
+      String content, String? receiverId, String? groupId) async {
+    final String? senderId = await SharedPreferences.getInstance()
+        .then((prefs) => prefs.getString('user_id'));
+    final token = await getToken();
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/messages/send'),
+      headers: {
+        'Authorization': token,
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({
+        'senderId': senderId,
+        'receiverId': receiverId,
+        'groupId': groupId,
+        'content': content,
+      }),
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception('Error al enviar el mensaje.');
     }
   }
 }
