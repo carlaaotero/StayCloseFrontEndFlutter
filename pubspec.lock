@@ -437,14 +437,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.10.0"
-  image_picker_web:
-    dependency: "direct main"
-    description:
-      name: image_picker_web
-      sha256: "2792196db19157d9af2903310ad99d42270841b872c51977b984d06e63bdb3ce"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.1.1"
   image_picker_windows:
     dependency: transitive
     description:

@@ -42,7 +42,8 @@ dependencies:
   url_launcher: ^6.0.9 # o la versión más reciente
   image_picker: ^0.8.7+5 # Para seleccionar imágenes
   #seleccionar images compatibles amb web
-  image_picker_web: ^2.0.0
+  #image_picker_web: ^2.0.0
+  
   #CAlendari dependencies
   table_calendar: ^3.1.2
   intl: ^0.19.0

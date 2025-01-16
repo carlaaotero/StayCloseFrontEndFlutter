@@ -6,7 +6,9 @@ import 'package:flutter_application_1/models/post.dart';
 import 'package:flutter_application_1/services/postServices.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:typed_data';
-import 'package:image_picker_web/image_picker_web.dart';
+//import 'package:image_picker_web/image_picker_web.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:image_picker/image_picker.dart'; // Para Android/iOS
 
 class PostController extends GetxController {
   final PostService postService = Get.put(PostService());
@@ -34,21 +36,34 @@ class PostController extends GetxController {
   Uint8List? selectedImage; // Bytes de la imagen seleccionada
   var uploadedImageUrl = ''.obs; // URL de la imagen subida a Cloudinary
 
-  // Seleccionar imagen desde el dispositivo
-  Future<void> pickImage() async {
-    try {
-      Uint8List? imageBytes = await ImagePickerWeb.getImageAsBytes();
-      if (imageBytes != null) {
-        selectedImage = imageBytes;
-        uploadedImageUrl.value = ''; // Reinicia la URL de Cloudinary
-        update(); // Actualiza la UI
-        Get.snackbar('Éxito', 'Imagen seleccionada correctamente');
+// Seleccionar imagen desde el dispositivo o navegador
+Future<void> pickImage() async {
+  try {
+    Uint8List? imageBytes;
+    
+    if (kIsWeb) {
+      // Código para la web
+      //imageBytes = await ImagePickerWeb.getImageAsBytes();
+    } else {
+      // Código para móvil
+      final ImagePicker picker = ImagePicker();
+      final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        imageBytes = await pickedFile.readAsBytes();
       }
-    } catch (e) {
-      Get.snackbar('Error', 'No se pudo seleccionar la imagen: $e',
-          snackPosition: SnackPosition.BOTTOM);
     }
+
+    if (imageBytes != null) {
+      selectedImage = imageBytes;
+      uploadedImageUrl.value = ''; // Reinicia la URL de Cloudinary
+      update(); // Actualiza la UI
+      Get.snackbar('Éxito', 'Imagen seleccionada correctamente');
+    }
+  } catch (e) {
+    Get.snackbar('Error', 'No se pudo seleccionar la imagen: $e',
+        snackPosition: SnackPosition.BOTTOM);
   }
+}
 
   // Subir imagen a Cloudinary
   Future<void> uploadImageToCloudinary() async {

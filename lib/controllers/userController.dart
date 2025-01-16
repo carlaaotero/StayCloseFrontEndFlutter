@@ -3,9 +3,11 @@ import 'package:get/get.dart';
 import 'package:flutter_application_1/services/userServices.dart';
 import 'package:flutter_application_1/models/user.dart';
 import 'dart:typed_data';
-import 'package:image_picker_web/image_picker_web.dart';
+//import 'package:image_picker_web/image_picker_web.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:image_picker/image_picker.dart'; // Para Android/iOS
 
 
 class UserController extends GetxController {
@@ -125,20 +127,36 @@ class UserController extends GetxController {
   Rxn<Uint8List> selectedImage = Rxn<Uint8List>(); // Bytes de la imagen seleccionada
   var uploadedImageUrl = ''.obs; // URL de la imagen subida a Cloudinary
 
-  // Seleccionar imagen desde el dispositivo
- Future<void> pickImage() async {
-    try {
-      Uint8List? imageBytes = await ImagePickerWeb.getImageAsBytes();
-      if (imageBytes != null) {
-        selectedImage.value = imageBytes; // Guarda la imagen en selectedImage
-        uploadedImageUrl.value = ''; // Si usas Cloudinary o alguna URL, resetea
-        update(); // Actualiza la UI
-        Get.snackbar('Éxito', 'Imagen seleccionada correctamente');
+ // Seleccionar imagen desde el dispositivo (compatible con Android/iOS y web)
+Future<void> pickImage() async {
+  try {
+    Uint8List? imageBytes;
+
+    if (kIsWeb) {
+      // Usar ImagePickerWeb para la web
+      //imageBytes = await ImagePickerWeb.getImageAsBytes();
+    } else {
+      // Usar ImagePicker para Android/iOS
+      final ImagePicker picker = ImagePicker();
+      final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        imageBytes = await pickedFile.readAsBytes();
       }
-    } catch (e) {
-      Get.snackbar('Error', 'No se pudo seleccionar la imagen: $e', snackPosition: SnackPosition.BOTTOM);
     }
+
+    if (imageBytes != null) {
+      selectedImage.value = imageBytes; // Guarda la imagen seleccionada
+      uploadedImageUrl.value = ''; // Restablece la URL si es necesario
+      update(); // Actualiza la UI
+      Get.snackbar('Éxito', 'Imagen seleccionada correctamente');
+    } else {
+      Get.snackbar('Error', 'No se seleccionó ninguna imagen');
+    }
+  } catch (e) {
+    Get.snackbar('Error', 'No se pudo seleccionar la imagen: $e',
+        snackPosition: SnackPosition.BOTTOM);
   }
+}
 
   // Subir imagen a Cloudinary
   Future<void> uploadImageToCloudinary() async {
