@@ -131,7 +131,9 @@ class _MapScreenState extends State<MapScreen> {
           children: [
             FlutterMap(
               options: MapOptions(
-                center: LatLng(41.382395521312176, 2.1567611541534366),
+                center: userLatitude != null && userLongitude != null
+                    ? LatLng(userLatitude!, userLongitude!)
+                    : LatLng(41.382395521312176, 2.1567611541534366), // Coordenadas por defecto si no se obtiene la ubicación
                 zoom: 13.0,
               ),
               children: [
