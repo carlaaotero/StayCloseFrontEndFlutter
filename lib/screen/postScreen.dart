@@ -82,26 +82,31 @@ class _PostsScreenState extends State<PostsScreen> {
       ),
       body: Center(
         child: Container(
-          width: MediaQuery.of(context).size.width * 0.6,
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0), // Ajustem el padding lateral
           child: Column(
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: ['Todos', 'Película', 'Serie', 'Libro', 'Podcast', 'Música']
                     .map((type) {
-                  return ElevatedButton(
-                    onPressed: () {
-                      _filterPostsByType(type);
-                    },
-                    child: Text(type.tr),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: selectedType == type
-                          ? const Color.fromRGBO(137, 175, 175, 1)
-                          : const Color.fromARGB(255, 178, 178, 178),
-                      foregroundColor: Colors.white,
-                      textStyle: const TextStyle(
-                        color: Colors.white,
+                  return Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _filterPostsByType(type);
+                      },
+                      child: Text(
+                        type.tr,
+                        style: TextStyle(fontSize: 12), // Font més petit
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: selectedType == type
+                            ? const Color.fromRGBO(137, 175, 175, 1)
+                            : const Color.fromARGB(255, 178, 178, 178),
+                        foregroundColor: Colors.white,
+                        textStyle: const TextStyle(
+                          color: Colors.white,
+                        ),
+                        padding: EdgeInsets.symmetric(vertical: 8), // Més petit per un botó més compacte
                       ),
                     ),
                   );
@@ -251,6 +256,7 @@ class _PostsScreenState extends State<PostsScreen> {
       },
     );
   }
+
 
   // Mostrar el cuadro de diálogo para crear un nuevo post
   void _showAddPostDialog(BuildContext context) {

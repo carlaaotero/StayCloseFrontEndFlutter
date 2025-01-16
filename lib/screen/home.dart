@@ -77,115 +77,117 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       ),
       body: Container(
         color: Color(0xFFE0F7FA),
-        child: Center(
-          child: Container(
-            padding: EdgeInsets.all(20),
-            margin: EdgeInsets.symmetric(horizontal: 300),
-            decoration: BoxDecoration(
-              color: Color.fromARGB(194, 162, 204, 204),
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 10,
-                  offset: Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Benvinguda a STAYCLOSE'.tr,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+        child: SingleChildScrollView(  // Permite desplazamiento
+          child: Center(
+            child: Container(
+              padding: EdgeInsets.all(20),
+              margin: EdgeInsets.symmetric(horizontal: 16),  // Reduce el margen
+              decoration: BoxDecoration(
+                color: Color.fromARGB(194, 162, 204, 204),
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 10,
+                    offset: Offset(0, 5),
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 10),
-                Text(
-                  'Ens alegra tenir-te aquí. Gaudeix d\'aquesta aplicació i mantén la teva comunitat segura.'.tr,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Benvinguda a STAYCLOSE'.tr,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 20),
-                AnimatedBuilder(
-                  animation: _animation,
-                  builder: (context, child) {
-                    return Transform.scale(
-                      scale: _animation.value,
-                      child: Image.asset(
-                        'assets/icons/logo.png',
-                        height: 80,
-                        width: 80,
-                      ),
-                    );
-                  },
-                ),
-                SizedBox(height: 20),
-                Text(
-                  'Próximos Eventos'.tr,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                  SizedBox(height: 10),
+                  Text(
+                    'Ens alegra tenir-te aquí. Gaudeix d\'aquesta aplicació i mantén la teva comunitat segura.'.tr,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white70,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                ),
-                SizedBox(height: 10),
-                // Desplegable dinámico para eventos
-                Obx(() {
-                  if (eventController.isLoading.value) {
-                    return CircularProgressIndicator();
-                  } else if (eventController.events.isEmpty) {
-                    return Text('No hay eventos próximos'.tr);
-                  } else {
-                    return ExpansionTile(
-                      title: Text(
-                        'Ver eventos próximos'.tr,
-                        style: TextStyle(fontSize: 16, color: Colors.black),
-                      ),
-                      children: eventController.events.map((event) {
-                        return Card(
-                          color: Colors.white,
-                          margin: EdgeInsets.symmetric(vertical: 2),
-                          child: ListTile(
-                            title: Text(event.name),
-                            subtitle: Text(
-                              DateFormat('yyyy-MM-dd').format(event.eventDate),
+                  SizedBox(height: 20),
+                  AnimatedBuilder(
+                    animation: _animation,
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: _animation.value,
+                        child: Image.asset(
+                          'assets/icons/logo.png',
+                          height: 80,
+                          width: 80,
+                        ),
+                      );
+                    },
+                  ),
+                  SizedBox(height: 20),
+                  Text(
+                    'Próximos Eventos'.tr,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  // Desplegable dinámico para eventos
+                  Obx(() {
+                    if (eventController.isLoading.value) {
+                      return CircularProgressIndicator();
+                    } else if (eventController.events.isEmpty) {
+                      return Text('No hay eventos próximos'.tr);
+                    } else {
+                      return ExpansionTile(
+                        title: Text(
+                          'Ver eventos próximos'.tr,
+                          style: TextStyle(fontSize: 16, color: Colors.black),
+                        ),
+                        children: eventController.events.map((event) {
+                          return Card(
+                            color: Colors.white,
+                            margin: EdgeInsets.symmetric(vertical: 2),
+                            child: ListTile(
+                              title: Text(event.name),
+                              subtitle: Text(
+                                DateFormat('yyyy-MM-dd').format(event.eventDate),
+                              ),
+                              trailing: Icon(Icons.event),
+                              onTap: () {
+                                // Navegar a la pantalla de calendario
+                                Get.to(() => CalendarScreen(), arguments: {
+                                  'selectedDay': event.eventDate,
+                                });
+                              },
                             ),
-                            trailing: Icon(Icons.event),
-                            onTap: () {
-                              // Navegar a la pantalla de calendario
-                              Get.to(() => CalendarScreen(), arguments: {
-                                'selectedDay': event.eventDate,
-                              });
-                            },
-                          ),
-                        );
-                      }).toList(),
-                    );
-                  }
-                }),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _contactEmergency,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color.fromARGB(214, 255, 67, 67),
-                    shape: CircleBorder(),
-                    padding: EdgeInsets.all(20),
+                          );
+                        }).toList(),
+                      );
+                    }
+                  }),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _contactEmergency,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color.fromARGB(214, 255, 67, 67),
+                      shape: CircleBorder(),
+                      padding: EdgeInsets.all(20),
+                    ),
+                    child: Icon(
+                      Icons.sos,
+                      color: Colors.white,
+                      size: 40,
+                    ),
                   ),
-                  child: Icon(
-                    Icons.sos,
-                    color: Colors.white,
-                    size: 40,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

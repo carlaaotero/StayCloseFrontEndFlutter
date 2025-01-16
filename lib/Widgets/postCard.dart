@@ -46,7 +46,7 @@ class PostCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8), // Mayor margen horizontal
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
       ),
@@ -101,13 +101,13 @@ class PostCard extends StatelessWidget {
           // Imagen al final
           if (post.image != null)
             Padding(
-              padding: const EdgeInsets.only(top: 16.0, bottom: 16.0, left: 200, right: 200), // Margen alrededor de la imagen
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16), // Ajustar márgenes
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8), // Esquinas redondeadas
                 child: Image.network(
                   post.image!,
                   fit: BoxFit.cover,
-                  width: double.infinity,
+                  width: double.infinity, // Ajusta el ancho para ocupar todo el espacio disponible
                   height: 300,
                   errorBuilder: (context, error, stackTrace) => const Icon(
                     Icons.broken_image,

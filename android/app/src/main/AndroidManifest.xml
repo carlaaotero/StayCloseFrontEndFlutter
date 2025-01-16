@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+ <!-- Permiso para realizar llamadas -->
+    <uses-permission android:name="android.permission.CALL_PHONE" />
     <application       
         android:label="flutter_application_1"
         android:name="${applicationName}"
