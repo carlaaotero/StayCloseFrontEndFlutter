@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_application_1/controllers/ubiController.dart';
 import 'package:flutter_application_1/controllers/ubiListController.dart';
-import 'package:flutter_application_1/widgets/ubiCard.dart';
+import 'package:flutter_application_1/Widgets/ubiCard.dart';
 import 'package:geolocator/geolocator.dart'; // Paquete para geolocalización
 import 'package:flutter_application_1/controllers/themeController.dart';
 
