@@ -61,7 +61,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         preferredSize: Size.fromHeight(kToolbarHeight), // Usamos el tamaño predeterminado del AppBar
         child: Obx(() {
           return AppBar(
-            title: Text('Iniciar Sesión'.tr, // Traducción dinámica
+            title: Text('Inicio'.tr, // Traducción dinámica
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)), // Tamaño y estilo fijo del texto
             backgroundColor: themeController.isDarkMode.value
                 ? Color(0xFF555A6F) // Color para el modo oscuro
