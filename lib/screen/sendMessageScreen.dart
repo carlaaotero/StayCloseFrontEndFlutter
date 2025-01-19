@@ -72,18 +72,24 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
     });
     */
     _socket.on('newMessage', (data) {
-      setState(() {
-        _messages.add(data);
-      });
+      final currentUser = Get.find<UserController>().currentUserName.value;
+      // Verificar que el mensaje no esté duplicado
+      if (_messages.any((msg) => msg['_id'] == data['_id'])) return;
+      // Agregar el mensaje solo si pertenece al chat actual
+      if (data['chat'] == widget.chatId) {
+        setState(() {
+          _messages.add(data);
+        });
 
-      // Desplazar automáticamente al final
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      });
+        // Desplazar automáticamente al final
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        });
+      }
     });
 
     _socket.onConnect((_) => print('Conectado al servidor de WebSocket'));
@@ -95,7 +101,12 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
     try {
       final messages = await MessageService.getMessages(widget.chatId);
       setState(() {
+        _messages.clear();
         _messages.addAll(messages);
+      });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
       });
     } catch (e) {
       print('Error al cargar mensajes: $e');
@@ -193,6 +204,47 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
 
   Future<void> _sendMessage() async {
     if (_messageController.text.isNotEmpty) {
+      final Map<String, String> newMessage = {
+        'sender': Get.find<UserController>().currentUserName.value,
+        'receiver': widget.receiverUsername,
+        'content': _messageController.text,
+        'timestamp': DateTime.now().toIso8601String(),
+      };
+
+      setState(() {
+        _messages.add(newMessage); // Agregar mensaje localmente
+      });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      });
+
+      try {
+        // Enviar el mensaje al backend
+        await MessageService.sendMessage(
+          chatId: widget.chatId,
+          senderUsername: newMessage['sender']!,
+          receiverUsername: newMessage['receiver']!,
+          content: newMessage['content']!,
+        );
+      } catch (e) {
+        Get.snackbar("Error", "No se pudo enviar el mensaje");
+      }
+
+      _messageController.clear(); // Limpiar el campo de texto
+    }
+  }
+
+  /*
+
+  Future<void> _sendMessage() async {
+    if (_messageController.text.isNotEmpty) {
+      
+      
       try {
         await MessageService.sendMessage(
           chatId: widget.chatId,
@@ -213,8 +265,10 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
       } catch (e) {
         Get.snackbar("Error", "No se pudo enviar el mensaje");
       }
+      
     }
   }
+  */
 
   @override
   Widget build(BuildContext context) {
