@@ -51,4 +51,72 @@ class ChatController extends GetxController {
       isLoading.value = false;
     }
   }
+
+  // Método para crear un grupo
+
+  Future<void> createGroup({
+    required String groupName,
+    required List<String> participants,
+  }) async {
+    if (isLoading.value) return;
+
+    try {
+      isLoading.value = true;
+
+      // Llamar al servicio para crear el grupo
+      final response = await ChatService.createGroup(
+        groupName: groupName,
+        participants: participants,
+      );
+
+      if (response != null) {
+        print("Grupo creado con éxito: $response");
+
+        // Recargar la lista de chats después de crear el grupo
+        await fetchUserChats(
+            participants[0]); // Usar el ID del creador o usuario actual
+
+        Get.snackbar("Éxito", "Grupo creado correctamente.");
+      } else {
+        throw Exception("Error al crear el grupo.");
+      }
+    } catch (e) {
+      print("Error al crear grupo: $e");
+      Get.snackbar("Error", "No se pudo crear el grupo.");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+/*
+  Future<void> createGroup({
+    required String groupName,
+    required List<String> participants,
+  }) async {
+    if (isLoading.value) return;
+
+    try {
+      isLoading.value = true;
+
+      // Llamar al servicio para crear el grupo
+      final response = await ChatService.createGroup(
+        groupName: groupName,
+        participants: participants,
+      );
+
+      if (response != null) {
+        print("Grupo creado con éxito: $response");
+        Get.snackbar("Éxito", "Grupo creado correctamente.");
+      } else {
+        throw Exception("Error al crear el grupo.");
+      }
+    } catch (e) {
+      print("Error al crear grupo: $e");
+      Get.snackbar("Error", "No se pudo crear el grupo.");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  */
 }
