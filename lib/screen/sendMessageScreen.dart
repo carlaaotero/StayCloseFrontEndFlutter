@@ -8,6 +8,8 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:geolocator/geolocator.dart'; // Importar Geolocator
 import 'package:url_launcher/url_launcher.dart'; // Importar URL Launcher
 import '../controllers/ubiController.dart'; // Importar UbiController
+import 'package:flutter_map/flutter_map.dart'; // Importar Flutter Map
+import 'package:latlong2/latlong.dart'; // Importar LatLong
 
 class SendMessageScreen extends StatefulWidget {
   final String receiverUsername;
@@ -33,13 +35,19 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
       _positionStreamSubscription; // Subscription para el stream de ubicación
   final ScrollController _scrollController = ScrollController();
 
-  ///-----
+  late MapController _mapController;
+  LatLng _currentLocation = LatLng(0.0, 0.0);
+
+  bool _isLocationSharing = false;
 
   @override
   void initState() {
     super.initState();
     _connectToSocket();
     _loadMessages();
+    _mapController = MapController();
+    _startLocationUpdates();
+    
   }
 
   @override
@@ -50,30 +58,6 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
     _scrollController.dispose(); // Liberar el controlador de scroll
     super.dispose();
   }
-
-
-
-void _startLocationUpdates() {
-  _positionStreamSubscription = Geolocator.getPositionStream(
-    locationSettings: LocationSettings(
-      accuracy: LocationAccuracy.high,
-      distanceFilter: 10, // Actualitzar només si la ubicació canvia més de 10 metres
-    ),
-  ).listen((Position position) async {
-    // Crear l'enllaç de OpenStreetMap amb la nova ubicació
-    String locationLink = 'https://www.openstreetmap.org/?mlat=${position.latitude}&mlon=${position.longitude}#map=15/${position.latitude}/${position.longitude}';
-
-    // Enviar el missatge amb l'enllaç de la nova ubicació
-    await MessageService.sendMessage(
-      chatId: widget.chatId,
-      senderUsername: Get.find<UserController>().currentUserName.value,
-      receiverUsername: widget.receiverUsername,
-      content: '¡Estoy Aquí! <a href="$locationLink">¡Mira el mapa!</a>',
-    );
-
-    print('Ubicación actualizada enviada: $locationLink');
-  });
-}
 
   Future<void> _connectToSocket() async {
     _socket = IO.io(
@@ -137,29 +121,40 @@ void _startLocationUpdates() {
     }
   }
 
-  Future<void> _sendLocation() async {
-    try {
-      // Obtener la ubicación actual
-      Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+  Future<void> _sendMessage() async {
+    if (_messageController.text.isNotEmpty) {
+      final Map<String, String> newMessage = {
+        'sender': Get.find<UserController>().currentUserName.value,
+        'receiver': widget.receiverUsername,
+        'content': _messageController.text,
+        'timestamp': DateTime.now().toIso8601String(),
+      };
 
-      // Crear el enlace de Google Maps
-      String locationLink =
-          'https://www.google.com/maps?q=${position.latitude},${position.longitude}';
+      setState(() {
+        _messages.add(newMessage); // Agregar mensaje localmente
+      });
 
-      // Enviar el mensaje con el texto "¡Estoy Aquí!" y el enlace de ubicación
-      await MessageService.sendMessage(
-        chatId: widget.chatId,
-        senderUsername: Get.find<UserController>().currentUserName.value,
-        receiverUsername: widget.receiverUsername,
-        content:
-            '¡Estoy Aquí! <a href="$locationLink">¡Estoy Aquí!</a>', // Mensaje con el enlace
-      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      });
 
-      print('Ubicación enviada: $locationLink');
-    } catch (e) {
-      print('Error al obtener la ubicación: $e');
-      Get.snackbar('Error', 'No se pudo obtener la ubicación');
+      try {
+        // Enviar el mensaje al backend
+        await MessageService.sendMessage(
+          chatId: widget.chatId,
+          senderUsername: newMessage['sender']!,
+          receiverUsername: newMessage['receiver']!,
+          content: newMessage['content']!,
+        );
+      } catch (e) {
+        Get.snackbar("Error", "No se pudo enviar el mensaje");
+      }
+
+      _messageController.clear(); // Limpiar el campo de texto
     }
   }
 
@@ -226,43 +221,159 @@ void _startLocationUpdates() {
     }
   }
 
-  Future<void> _sendMessage() async {
-    if (_messageController.text.isNotEmpty) {
-      final Map<String, String> newMessage = {
-        'sender': Get.find<UserController>().currentUserName.value,
-        'receiver': widget.receiverUsername,
-        'content': _messageController.text,
-        'timestamp': DateTime.now().toIso8601String(),
-      };
+  //FUNCIONS UBICACIÓ
 
+  // Funció per actualitzar la ubicació en temps real
+  void _startLocationUpdates() {
+    _positionStreamSubscription = Geolocator.getPositionStream(
+      locationSettings: LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter:
+            10, // Actualitzar només si la ubicació canvia més de 10 metres
+      ),
+    ).listen((Position position) async {
+      /*// Crear l'enllaç de OpenStreetMap amb la nova ubicació
+    String locationLink = 'https://www.openstreetmap.org/?mlat=${position.latitude}&mlon=${position.longitude}#map=15/${position.latitude}/${position.longitude}';
+
+    // Enviar el missatge amb l'enllaç de la nova ubicació
+    await MessageService.sendMessage(
+      chatId: widget.chatId,
+      senderUsername: Get.find<UserController>().currentUserName.value,
+      receiverUsername: widget.receiverUsername,
+      content: '¡Estoy Aquí! <a href="$locationLink">¡Mira el mapa!</a>',
+    );
+
+    print('Ubicación actualizada enviada: $locationLink');*/
+
+      // Actualitzar la ubicació cada vegada que canviï
       setState(() {
-        _messages.add(newMessage); // Agregar mensaje localmente
+        _currentLocation = LatLng(position.latitude, position.longitude);
       });
 
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      });
+      // Actualitzar la vista del mapa per centrar-se en la nova ubicació
+      _mapController.move(
+          _currentLocation, 15); // Moure el mapa a la nova ubicació
 
-      try {
-        // Enviar el mensaje al backend
-        await MessageService.sendMessage(
-          chatId: widget.chatId,
-          senderUsername: newMessage['sender']!,
-          receiverUsername: newMessage['receiver']!,
-          content: newMessage['content']!,
-        );
-      } catch (e) {
-        Get.snackbar("Error", "No se pudo enviar el mensaje");
-      }
+          // Enviar la ubicació al servidor a través de Socket.io
+    _socket.emit('sendLocation', {
+      'chatId': widget.chatId,
+      'username': Get.find<UserController>().currentUserName.value,
+      'latitude': position.latitude,
+      'longitude': position.longitude,
+    });
 
-      _messageController.clear(); // Limpiar el campo de texto
+      print(
+          'Ubicación actualizada: ${_currentLocation.latitude}, ${_currentLocation.longitude}');
+    });
+  }
+
+  /*//funcions per si ho volem amb timer
+  Timer? _locationUpdateTimer;
+
+void _startLocationUpdates() {
+  _locationUpdateTimer = Timer.periodic(Duration(seconds: 5), (_) {
+    _sendLocation();  // Enviar actualitzacions de la ubicació cada 5 segons
+  });
+}
+
+void _stopLocationUpdates() {
+  _locationUpdateTimer?.cancel();  // Aturar les actualitzacions de la ubicació
+}
+*/
+
+  // Enviar la ubicació com a missatge de text amb GoogleMaps
+  Future<void> _sendLocationGoogle() async {
+    try {
+      // Obtener la ubicación actual
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+
+      // Crear el enlace de Google Maps
+      String locationLink =
+          'https://www.google.com/maps?q=${position.latitude},${position.longitude}';
+
+      // Enviar el mensaje con el texto "¡Estoy Aquí!" y el enlace de ubicación
+      await MessageService.sendMessage(
+        chatId: widget.chatId,
+        senderUsername: Get.find<UserController>().currentUserName.value,
+        receiverUsername: widget.receiverUsername,
+        content:
+            '¡Estoy Aquí! <a href="$locationLink">¡Estoy Aquí!</a>', // Mensaje con el enlace
+      );
+
+      print('Ubicación enviada: $locationLink');
+    } catch (e) {
+      print('Error al obtener la ubicación: $e');
+      Get.snackbar('Error', 'No se pudo obtener la ubicación');
     }
   }
 
+  // Enviar la ubicació com a missatge de text amb OpenStreetMap
+  Future<void> _sendLocation() async {
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+
+      // Crear el link d'OpenStreetMap
+      String locationLink =
+          'https://www.openstreetmap.org/?mlat=${position.latitude}&mlon=${position.longitude}#map=15/${position.latitude}/${position.longitude}';
+
+      await MessageService.sendMessage(
+        chatId: widget.chatId,
+        senderUsername: Get.find<UserController>().currentUserName.value,
+        receiverUsername: widget.receiverUsername,
+        content: '¡Estoy Aquí! <a href="$locationLink">¡Mira el mapa!</a>',
+      );
+
+      print('Ubicación enviada: $locationLink');
+
+      // Activar la visualització del mapa
+      setState(() {
+        _isLocationSharing = true;
+      });
+    } catch (e) {
+      print('Error al obtener la ubicación: $e');
+      Get.snackbar('Error', 'No se pudo obtener la ubicación');
+    }
+  }
+
+  // Construir el mapa con FlutterMap
+  Widget _buildMap() {
+    return Container(
+      height: 150, // Alçada del mapa
+      width: 150, 
+      child: FlutterMap(
+        mapController: _mapController,
+        options: MapOptions(
+          center: _currentLocation, // Estableix la ubicació inicial
+          zoom: 15,
+        ),
+        children: [
+          TileLayer(
+            urlTemplate:
+                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", // URL d'OpenStreetMap
+            subdomains: ['a', 'b', 'c'],
+          ),
+          MarkerLayer(
+            markers: [
+              Marker(
+                width: 40.0,
+                height: 40.0,
+                point: _currentLocation,
+                builder: (ctx) => Container(
+                  child: Icon(
+                    Icons.location_on,
+                    color: Colors.red,
+                    size: 30.0,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -275,9 +386,10 @@ void _startLocationUpdates() {
         children: [
           Expanded(
             child: ListView.builder(
-              controller: _scrollController, // Asigna el ScrollController aquí
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
+                controller:
+                    _scrollController, // Asigna el ScrollController aquí
+                itemCount: _messages.length,
+                /*itemBuilder: (context, index) {
                 final message = _messages[index];
                 final isSender = message['sender'] ==
                     Get.find<UserController>().currentUserName.value;
@@ -294,7 +406,7 @@ void _startLocationUpdates() {
                     ),
                     child: message['content'].contains('<a href="')
                         ? GestureDetector(
-                            onTap: () => _openMap(message['content'].substring(
+                        onTap: () => _openMap(message['content'].substring(
                                 message['content'].indexOf('"') + 1,
                                 message['content'].lastIndexOf('"'))),
                             child: Text(
@@ -311,8 +423,76 @@ void _startLocationUpdates() {
                           ),
                   ),
                 );
-              },
-            ),
+              },*/
+                itemBuilder: (context, index) {
+                  final message = _messages[index];
+                  final isSender = message['sender'] ==
+                      Get.find<UserController>().currentUserName.value;
+
+                  // Si el missatge és un enllaç de la ubicació, mostrar el mapa
+                  if (message['content'].contains('<a href="')) {
+                    String url = message['content'].substring(
+                      message['content'].indexOf('"') + 1,
+                      message['content'].lastIndexOf('"'),
+                    );
+                    return Align(
+                      alignment: isSender
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
+                      child: GestureDetector(
+                        onTap: () => _openMap(url),
+                        child: Container(
+                          margin: const EdgeInsets.all(8.0),
+                          padding: const EdgeInsets.all(12.0),
+                          decoration: BoxDecoration(
+                            color: isSender
+                                ? Color(0xFF89AFAF)
+                                : Colors.grey.shade300,
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          child: Text(
+                            '¡Estic Aquí!',
+                            style: TextStyle(
+                              color: Colors.blue,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
+                  // Si s'està compartint la ubicació, mostrar el mapa
+                  if (_isLocationSharing) {
+                    return Align(
+                      alignment: isSender
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
+                      child: Container(
+                        margin: const EdgeInsets.all(8.0),
+                        child: _buildMap(), // Aquí es mostra el mapa
+                      ),
+                    );
+                  }
+
+                  return Align(
+                    alignment:
+                        isSender ? Alignment.centerRight : Alignment.centerLeft,
+                    child: Container(
+                      margin: const EdgeInsets.all(8.0),
+                      padding: const EdgeInsets.all(12.0),
+                      decoration: BoxDecoration(
+                        color:
+                            isSender ? Color(0xFF89AFAF) : Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      child: Text(
+                        message['content'],
+                        style: TextStyle(color: Colors.black87),
+                      ),
+                    ),
+                  );
+                }),
           ),
           _buildMessageInputBar(context),
         ],
@@ -373,13 +553,17 @@ void _startLocationUpdates() {
             spacing: 20,
             runSpacing: 20,
             children: [
-             _buildAttachmentOption(
+              _buildAttachmentOption(
                 context,
                 icon: Icons.location_on,
                 label: 'Localización',
                 onTap: () {
                   Navigator.pop(context);
                   _sendLocation();
+                  setState(() {
+                    _isLocationSharing =
+                        true; // Activar l'opció de compartir ubicació
+                  });
                 },
               ),
               _buildAttachmentOption(
@@ -392,14 +576,14 @@ void _startLocationUpdates() {
                 },
               ),
               _buildAttachmentOption(
-              context,
-              icon: Icons.map,
-              label: 'Compartir ubicación',
-              onTap: () {
-                Navigator.pop(context);
-                _startLocationUpdates();
-              },
-            ),
+                context,
+                icon: Icons.map,
+                label: 'Compartir Google',
+                onTap: () {
+                  Navigator.pop(context);
+                  _sendLocationGoogle();
+                },
+              ),
             ],
           ),
         );
@@ -433,4 +617,3 @@ void _startLocationUpdates() {
     );
   }
 }
-
