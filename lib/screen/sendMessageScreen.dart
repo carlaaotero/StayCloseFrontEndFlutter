@@ -53,7 +53,7 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
 
   Future<void> _connectToSocket() async {
     _socket = IO.io(
-      'http://127.0.0.1:3000',
+      'http://147.83.7.155:3000',
       IO.OptionBuilder()
           .setTransports(['websocket'])
           .disableAutoConnect()
@@ -115,83 +115,85 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
 
   Future<void> _sendLocation() async {
     try {
-      // Obtener la ubicación actual
-      Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+        // Usar las coordenadas predeterminadas directamente
+        Position position = Position(
+            latitude: 41.83330808199569,
+            longitude: 1.7556439818092404,
+            timestamp: DateTime.now(),
+            accuracy: 0.0,
+            altitude: 0.0,
+            altitudeAccuracy: 0.0,
+            heading: 0.0,
+            headingAccuracy: 0.0,
+            speed: 0.0,
+            speedAccuracy: 0.0,
+        );
 
-      // Crear el enlace de Google Maps
-      String locationLink =
-          'https://www.google.com/maps?q=${position.latitude},${position.longitude}';
+        // Crear el enlace de Google Maps
+        String locationLink = 'https://www.google.com/maps?q=${position.latitude},${position.longitude}';
 
-      // Enviar el mensaje con el texto "¡Estoy Aquí!" y el enlace de ubicación
-      await MessageService.sendMessage(
-        chatId: widget.chatId,
-        senderUsername: Get.find<UserController>().currentUserName.value,
-        receiverUsername: widget.receiverUsername,
-        content:
-            '¡Estoy Aquí! <a href="$locationLink">¡Estoy Aquí!</a>', // Mensaje con el enlace
-      );
+        // Enviar el mensaje con el texto "¡Estoy Aquí!" y el enlace de ubicación
+        await MessageService.sendMessage(
+            chatId: widget.chatId,
+            senderUsername: Get.find<UserController>().currentUserName.value,
+            receiverUsername: widget.receiverUsername,
+            content: '¡Estoy Aquí! <a href="$locationLink">¡Estoy Aquí!</a>', // Mensaje con el enlace
+        );
 
-      print('Ubicación enviada: $locationLink');
+        print('Ubicación enviada: $locationLink');
     } catch (e) {
-      print('Error al obtener la ubicación: $e');
-      Get.snackbar('Error', 'No se pudo obtener la ubicación');
+        print('Error al enviar la ubicación: $e');
+        Get.snackbar('Error', 'No se pudo enviar la ubicación');
     }
   }
 
   Future<void> _sendHomeStatus() async {
     try {
-      String currentUsername = Get.find<UserController>().currentUserName.value;
-      String? homeAddress = await _userService.getHomeUser(currentUsername);
+        String currentUsername = Get.find<UserController>().currentUserName.value;
+        String? homeAddress = await _userService.getHomeUser(currentUsername);
 
-      if (homeAddress != null) {
-        // Obtener coordenadas de la dirección de casa
-        Map<String, double> homeCoordinates =
-            await _ubiController.getCoordinatesFromAddress(homeAddress);
+        if (homeAddress != null) {
+            // Obtener coordenadas de la dirección de casa
+            Map<String, double> homeCoordinates = await _ubiController.getCoordinatesFromAddress(homeAddress);
 
-        // Enviar mensaje "Me dirijo a casa"
-        await MessageService.sendMessage(
-          chatId: widget.chatId,
-          senderUsername: currentUsername,
-          receiverUsername: widget.receiverUsername,
-          content: 'Me dirijo a casa',
-        );
-
-        // Comprobar la ubicación continuamente
-        _positionStreamSubscription = Geolocator.getPositionStream(
-          locationSettings: LocationSettings(
-            accuracy: LocationAccuracy.high,
-            distanceFilter: 10,
-          ),
-        ).listen((Position position) async {
-          double distanceInMeters = Geolocator.distanceBetween(
-            position.latitude,
-            position.longitude,
-            homeCoordinates['latitude']!,
-            homeCoordinates['longitude']!,
-          );
-
-          if (distanceInMeters < 100) {
-            // Enviar mensaje "Ya estoy en casa" cuando se detecta que el usuario ha llegado a casa
+            // Enviar mensaje "Me dirijo a casa"
             await MessageService.sendMessage(
-              chatId: widget.chatId,
-              senderUsername: currentUsername,
-              receiverUsername: widget.receiverUsername,
-              content: 'Ya estoy en casa',
+                chatId: widget.chatId,
+                senderUsername: currentUsername,
+                receiverUsername: widget.receiverUsername,
+                content: 'Me dirijo a casa',
             );
 
-            // Cancelar la suscripción al stream de ubicación
-            _positionStreamSubscription?.cancel();
-          }
-        });
-      } else {
-        Get.snackbar('Error', 'No se pudo obtener la dirección de casa');
-      }
+            // Usar las coordenadas predeterminadas directamente
+            double distanceInMeters = Geolocator.distanceBetween(
+                41.83330808199569,
+                1.7556439818092404,
+                homeCoordinates['latitude']!,
+                homeCoordinates['longitude']!,
+            );
+
+            // Print de la distancia en metros
+            print("Distancia a casa: $distanceInMeters metros");
+
+            if (distanceInMeters < 200) {
+                // Enviar mensaje "Ya estoy en casa" cuando se detecta que el usuario ha llegado a casa
+                await MessageService.sendMessage(
+                    chatId: widget.chatId,
+                    senderUsername: currentUsername,
+                    receiverUsername: widget.receiverUsername,
+                    content: 'Ya estoy en casa',
+                );
+            }
+        } else {
+            Get.snackbar('Error', 'No se pudo obtener la dirección de casa');
+        }
     } catch (e) {
-      print('Error al obtener la dirección de casa: $e');
-      Get.snackbar('Error', 'No se pudo obtener la dirección de casa');
+        print('Error al obtener la dirección de casa: $e');
+        Get.snackbar('Error', 'No se pudo obtener la dirección de casa');
     }
   }
+
+
 
   // Método para abrir el enlace de Google Maps
   Future<void> _openMap(String url) async {

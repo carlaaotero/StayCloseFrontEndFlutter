@@ -63,14 +63,14 @@ class _MapScreenState extends State<MapScreen> {
     }
 
     // Verificar si se tiene permiso para acceder a la ubicación
-    permission = await Geolocator.checkPermission();
+    /*permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         print("Permiso de ubicación denegado.");
         return;
       }
-    }
+    }*/
 
     // Obtener la ubicación actual del usuario
     try {
@@ -81,29 +81,35 @@ class _MapScreenState extends State<MapScreen> {
         userLatitude = position.latitude;
         userLongitude = position.longitude;
       });
-
-      // Llamamos a la función para obtener las ubicaciones cercanas
-      if (userLatitude != null && userLongitude != null) {
-        await ubiListController.getNearbyUbis(userLatitude!, userLongitude!, 10); // Buscar ubicaciones cercanas a 10 km de distancia
-      }
-
-      // Añadir el marcador en el mapa
-      if (userLatitude != null && userLongitude != null) {
-        final userMarker = Marker(
-          point: LatLng(userLatitude!, userLongitude!),
-          builder: (ctx) => const Icon(
-            Icons.location_on,
-            color: Colors.red, // Color rojo para la ubicación del usuario
-            size: 38.0,
-          ),
-        );
-
-        print("Marcador añadido en la ubicación del usuario.");
-      }
     } catch (e) {
-      print("Error al obtener la ubicación: $e");
+      // En caso de error, usa valores predeterminados
+      setState(() {
+        userLatitude = 41.83330808199569;
+        userLongitude = 1.7556439818092404;
+      });
+      print("Error al obtener la ubicación: $e. Usando ubicación predeterminada.");
+    }
+
+    // Llamamos a la función para obtener las ubicaciones cercanas
+    if (userLatitude != null && userLongitude != null) {
+      await ubiListController.getNearbyUbis(userLatitude!, userLongitude!, 10); // Buscar ubicaciones cercanas a 10 km de distancia
+    }
+
+    // Añadir el marcador en el mapa
+    if (userLatitude != null && userLongitude != null) {
+      final userMarker = Marker(
+        point: LatLng(userLatitude!, userLongitude!),
+        builder: (ctx) => const Icon(
+          Icons.location_on,
+          color: Colors.red, // Color rojo para la ubicación del usuario
+          size: 38.0,
+        ),
+      );
+
+      print("Marcador añadido en la ubicación del usuario.");
     }
   }
+
 
 
 // Funció per filtrar ubicacions segons tipus

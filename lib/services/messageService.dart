@@ -48,7 +48,7 @@ import 'package:dio/dio.dart';
 
 class MessageService {
   static final Dio _dio =
-      Dio(BaseOptions(baseUrl: "http://127.0.0.1:3000/api/message"));
+      Dio(BaseOptions(baseUrl: "http://147.83.7.155:3000/api/message"));
 
   // Método para enviar mensajes
   static Future<void> sendMessage({
