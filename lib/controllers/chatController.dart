@@ -1,11 +1,15 @@
 import 'package:get/get.dart';
 import '../models/chat.dart';
 import '../services/chatService.dart';
+import 'userController.dart';
 
 class ChatController extends GetxController {
   var isLoading = false.obs; // Indicador de carga
   var chatId = ''.obs; // Almacena el chatId actual
   var userChats = <Chat>[].obs; // Lista de chats existentes
+
+  // Instancia de UserController
+  final UserController userController = Get.find<UserController>();
 
   // Método para obtener o crear un chat
   Future<void> getOrCreateChat({
@@ -72,11 +76,9 @@ class ChatController extends GetxController {
       if (response != null) {
         print("Grupo creado con éxito: $response");
 
-        // Recargar la lista de chats después de crear el grupo
-        await fetchUserChats(
-            participants[0]); // Usar el ID del creador o usuario actual
-
         Get.snackbar("Éxito", "Grupo creado correctamente.");
+        // Actualizar la lista de chats del usuario
+        await fetchUserChats(userController.currentUserName.value);
       } else {
         throw Exception("Error al crear el grupo.");
       }

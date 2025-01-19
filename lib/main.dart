@@ -20,6 +20,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_application_1/translation_service.dart'; // Asegúrate de que el archivo esté en la ruta correcta
 import 'package:flutter_application_1/controllers/themeController.dart';
 import 'package:flutter_application_1/screen/chatScreen.dart';
+import 'package:flutter_application_1/controllers/chatController.dart';
 
 void main() {
   CloudinaryContext.cloudinary =
@@ -28,6 +29,7 @@ void main() {
   Get.put(
       UserController()); // Esto asegura que el controlador se ponga en el GetX 'depósito'
   Get.put(ThemeController());
+  Get.put(ChatController());
   runApp(
     MyApp(),
   );
