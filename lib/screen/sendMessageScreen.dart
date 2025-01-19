@@ -51,6 +51,30 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
     super.dispose();
   }
 
+
+
+void _startLocationUpdates() {
+  _positionStreamSubscription = Geolocator.getPositionStream(
+    locationSettings: LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 10, // Actualitzar només si la ubicació canvia més de 10 metres
+    ),
+  ).listen((Position position) async {
+    // Crear l'enllaç de OpenStreetMap amb la nova ubicació
+    String locationLink = 'https://www.openstreetmap.org/?mlat=${position.latitude}&mlon=${position.longitude}#map=15/${position.latitude}/${position.longitude}';
+
+    // Enviar el missatge amb l'enllaç de la nova ubicació
+    await MessageService.sendMessage(
+      chatId: widget.chatId,
+      senderUsername: Get.find<UserController>().currentUserName.value,
+      receiverUsername: widget.receiverUsername,
+      content: '¡Estoy Aquí! <a href="$locationLink">¡Mira el mapa!</a>',
+    );
+
+    print('Ubicación actualizada enviada: $locationLink');
+  });
+}
+
   Future<void> _connectToSocket() async {
     _socket = IO.io(
       'http://127.0.0.1:3000',
@@ -239,36 +263,6 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
     }
   }
 
-  /*
-
-  Future<void> _sendMessage() async {
-    if (_messageController.text.isNotEmpty) {
-      
-      
-      try {
-        await MessageService.sendMessage(
-          chatId: widget.chatId,
-          senderUsername: Get.find<UserController>().currentUserName.value,
-          receiverUsername: widget.receiverUsername,
-          content: _messageController.text,
-        );
-        _messageController.clear();
-
-        // Desplazar automáticamente al final
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-          );
-        });
-      } catch (e) {
-        Get.snackbar("Error", "No se pudo enviar el mensaje");
-      }
-      
-    }
-  }
-  */
 
   @override
   Widget build(BuildContext context) {
@@ -379,7 +373,7 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
             spacing: 20,
             runSpacing: 20,
             children: [
-              _buildAttachmentOption(
+             _buildAttachmentOption(
                 context,
                 icon: Icons.location_on,
                 label: 'Localización',
@@ -397,6 +391,15 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
                   _sendHomeStatus();
                 },
               ),
+              _buildAttachmentOption(
+              context,
+              icon: Icons.map,
+              label: 'Compartir ubicación',
+              onTap: () {
+                Navigator.pop(context);
+                _startLocationUpdates();
+              },
+            ),
             ],
           ),
         );
@@ -431,206 +434,3 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
   }
 }
 
-
-/*
-
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import '../services/messageService.dart';
-import '../controllers/userController.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
-import '../models/message.dart';
-
-class SendMessageScreen extends StatefulWidget {
-  final String receiverUsername;
-  final String chatId;
-
-  const SendMessageScreen({
-    required this.receiverUsername,
-    required this.chatId,
-  });
-
-  @override
-  _SendMessageScreenState createState() => _SendMessageScreenState();
-}
-
-class _SendMessageScreenState extends State<SendMessageScreen> {
-  final TextEditingController _messageController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
-  final List<Message> _messages = [];
-  late IO.Socket _socket;
-
-  @override
-  void initState() {
-    super.initState();
-    _connectToSocket();
-    _loadMessages();
-  }
-
-  @override
-  void dispose() {
-    _socket.disconnect();
-    _messageController.dispose();
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _connectToSocket() async {
-    _socket = IO.io(
-      'http://127.0.0.1:3000',
-      IO.OptionBuilder()
-          .setTransports(['websocket'])
-          .disableAutoConnect()
-          .build(),
-    );
-
-    _socket.connect();
-    _socket.emit('joinChat', widget.chatId);
-
-    _socket.on('newMessage', (data) {
-      final message = Message.fromJson(data);
-      setState(() {
-        _messages.add(message);
-      });
-      _scrollToBottom();
-    });
-
-    _socket.onConnect((_) => print('Conectado al servidor de WebSocket'));
-    _socket
-        .onDisconnect((_) => print('Desconectado del servidor de WebSocket'));
-  }
-
-  Future<void> _loadMessages() async {
-    try {
-      final messages = await MessageService.getMessages(widget.chatId);
-      setState(() {
-        _messages.addAll(messages);
-      });
-      _scrollToBottom();
-    } catch (e) {
-      print('Error al cargar mensajes: $e');
-    }
-  }
-
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
-
-  Future<void> _sendMessage() async {
-    if (_messageController.text.isNotEmpty) {
-      try {
-        await MessageService.sendMessage(
-          chatId: widget.chatId,
-          senderUsername: Get.find<UserController>().currentUserName.value,
-          receiverUsername: widget.receiverUsername,
-          content: _messageController.text,
-        );
-        _messageController.clear();
-      } catch (e) {
-        Get.snackbar("Error", "No se pudo enviar el mensaje");
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Chat con ${widget.receiverUsername}'),
-        backgroundColor: const Color(0xFF89AFAF),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final message = _messages[index];
-                final isSender = message.sender ==
-                    Get.find<UserController>().currentUserName.value;
-                return Align(
-                  alignment:
-                      isSender ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.all(8.0),
-                    padding: const EdgeInsets.all(12.0),
-                    decoration: BoxDecoration(
-                      color: isSender
-                          ? const Color(0xFF89AFAF)
-                          : Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          message.content,
-                          style: TextStyle(
-                              color: isSender ? Colors.white : Colors.black87),
-                        ),
-                        const SizedBox(height: 4.0),
-                        Text(
-                          message.formattedTime,
-                          style: TextStyle(
-                            fontSize: 12.0,
-                            color: Colors.grey.shade700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          _buildMessageInputBar(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMessageInputBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 5,
-            offset: Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _messageController,
-              decoration: const InputDecoration(
-                hintText: 'Escribe un mensaje...',
-                border: InputBorder.none,
-              ),
-              onSubmitted: (value) => _sendMessage(),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.send, color: Color(0xFF89AFAF)),
-            onPressed: _sendMessage,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-*/
