@@ -81,8 +81,8 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
       }
     });
 
-      // Escoltar canvis de posició
-  _positionStreamSubscription =
+    /*  // Escoltar canvis de posició
+    _positionStreamSubscription =
       Geolocator.getPositionStream(locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
         distanceFilter: 3, // Només actualitzar si es mou més de 10 metres
@@ -98,7 +98,7 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
     });
 
     print('Ubicació enviada: $locationMessage');
-  });
+  });*/
 
     _socket.onConnect((_) => print('Conectado al servidor de WebSocket'));
     _socket
@@ -171,24 +171,41 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
         receiverUsername: widget.receiverUsername,
         content: locationMessage,
       );
+      // Escoltar canvis de posició
+        _positionStreamSubscription =
+          Geolocator.getPositionStream(locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            distanceFilter: 3, // Només actualitzar si es mou més de 10 metres
+          )).listen((Position position) {
+        // Enviar la ubicació al servidor
+        String locationMessage =
+            'location:${position.latitude},${position.longitude}';
 
-      print('Ubicación enviada: $locationMessage');
+        _socket.emit('sendLocation', {
+          'chatId': widget.chatId,
+          'sender': Get.find<UserController>().currentUserName.value,
+          'content': locationMessage,
+        });
+
+          print('Ubicació enviada: $locationMessage');
+        });
+
     } catch (e) {
       print('Error al obtener la ubicación: $e');
       Get.snackbar('Error', 'No se pudo obtener la ubicación');
     }
   }
 
-    Future<void> _sendHomeStatus() async {
+  Future<void> _sendHomeStatus() async {
     try {
       String currentUsername = Get.find<UserController>().currentUserName.value;
       String? homeAddress = await _userService.getHomeUser(currentUsername);
-      print('La meva direcció de casa es: $homeAddress');
+
       if (homeAddress != null) {
         // Obtener coordenadas de la dirección de casa
         Map<String, double> homeCoordinates =
             await _ubiController.getCoordinatesFromAddress(homeAddress);
-        print('Les meves coordenades de casa son: $homeCoordinates');
+        print('estas son mis coordenadas de casa: $homeCoordinates');
         // Enviar mensaje "Me dirijo a casa"
         await MessageService.sendMessage(
           chatId: widget.chatId,
@@ -196,7 +213,7 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
           receiverUsername: widget.receiverUsername,
           content: 'Me dirijo a casa',
         );
-
+        print('Comparo distancia');
         // Comprobar la ubicación continuamente
         _positionStreamSubscription = Geolocator.getPositionStream(
           locationSettings: LocationSettings(
@@ -210,9 +227,8 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
             homeCoordinates['latitude']!,
             homeCoordinates['longitude']!,
           );
-          print('La destancia fins a casa meva es: $distanceInMeters');
-
-          if (distanceInMeters < 100) {
+          print('La distancia en metros es: $distanceInMeters');
+          if (distanceInMeters < 200) {
             // Enviar mensaje "Ya estoy en casa" cuando se detecta que el usuario ha llegado a casa
             await MessageService.sendMessage(
               chatId: widget.chatId,
