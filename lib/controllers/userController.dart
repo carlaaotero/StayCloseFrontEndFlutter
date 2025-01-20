@@ -11,6 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 class UserController extends GetxController {
   final UserService userService = Get.put(UserService());
   var currentUserName = ''.obs;
+  // Lista de usuarios cargados
+  var users = <UserModel>[].obs;
 
   // Controladores de texto para la UI
   final TextEditingController usernameController = TextEditingController();
@@ -43,6 +45,45 @@ class UserController extends GetxController {
       print('Error al obtener el usuario: $e');
     }
   }
+
+  // Método para cargar todos los usuarios
+  Future<void> fetchUsers() async {
+    try {
+      isLoading.value = true;
+
+      // Llamar al servicio para obtener los usuarios
+      final fetchedUsers = await userService
+          .getUsers(); // Asegúrate de que esto devuelva una lista válida
+      if (fetchedUsers.isNotEmpty) {
+        users.value = fetchedUsers; // Actualizar la lista de usuarios
+      } else {
+        print("No se encontraron usuarios.");
+        users.clear(); // Limpia la lista si no hay usuarios
+      }
+    } catch (e) {
+      print("Error al obtener usuarios: $e");
+      Get.snackbar("Error", "No se pudieron cargar los usuarios.");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /*
+  Future<void> fetchUsers() async {
+    try {
+      isLoading.value = true;
+
+      // Llamar al servicio para obtener los usuarios
+      final fetchedUsers = await userService.getUsers();
+      users.value = fetchedUsers; // Actualizar la lista de usuarios
+    } catch (e) {
+      print("Error al obtener usuarios: $e");
+      Get.snackbar("Error", "No se pudieron cargar los usuarios.");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+  */
 
   // Método para editar un usuario
   void editUser(UserModel updatedUser, String id, String password) async {

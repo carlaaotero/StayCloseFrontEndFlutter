@@ -1,11 +1,15 @@
 import 'package:get/get.dart';
 import '../models/chat.dart';
 import '../services/chatService.dart';
+import 'userController.dart';
 
 class ChatController extends GetxController {
   var isLoading = false.obs; // Indicador de carga
   var chatId = ''.obs; // Almacena el chatId actual
   var userChats = <Chat>[].obs; // Lista de chats existentes
+
+  // Instancia de UserController
+  final UserController userController = Get.find<UserController>();
 
   // Método para obtener o crear un chat
   Future<void> getOrCreateChat({
@@ -51,4 +55,70 @@ class ChatController extends GetxController {
       isLoading.value = false;
     }
   }
+
+  // Método para crear un grupo
+
+  Future<void> createGroup({
+    required String groupName,
+    required List<String> participants,
+  }) async {
+    if (isLoading.value) return;
+
+    try {
+      isLoading.value = true;
+
+      // Llamar al servicio para crear el grupo
+      final response = await ChatService.createGroup(
+        groupName: groupName,
+        participants: participants,
+      );
+
+      if (response != null) {
+        print("Grupo creado con éxito: $response");
+
+        Get.snackbar("Éxito", "Grupo creado correctamente.");
+        // Actualizar la lista de chats del usuario
+        await fetchUserChats(userController.currentUserName.value);
+      } else {
+        throw Exception("Error al crear el grupo.");
+      }
+    } catch (e) {
+      print("Error al crear grupo: $e");
+      Get.snackbar("Error", "No se pudo crear el grupo.");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+/*
+  Future<void> createGroup({
+    required String groupName,
+    required List<String> participants,
+  }) async {
+    if (isLoading.value) return;
+
+    try {
+      isLoading.value = true;
+
+      // Llamar al servicio para crear el grupo
+      final response = await ChatService.createGroup(
+        groupName: groupName,
+        participants: participants,
+      );
+
+      if (response != null) {
+        print("Grupo creado con éxito: $response");
+        Get.snackbar("Éxito", "Grupo creado correctamente.");
+      } else {
+        throw Exception("Error al crear el grupo.");
+      }
+    } catch (e) {
+      print("Error al crear grupo: $e");
+      Get.snackbar("Error", "No se pudo crear el grupo.");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  */
 }

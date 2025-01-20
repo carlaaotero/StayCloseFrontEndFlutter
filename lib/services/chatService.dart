@@ -35,4 +35,47 @@ class ChatService {
       throw Exception("No se pudieron obtener los chats.");
     }
   }
+
+  // Método para crear un grupo
+  static Future<dynamic> createGroup({
+    required String groupName,
+    required List<String> participants,
+  }) async {
+    try {
+      final response = await _dio.post(
+        "/group/create",
+        data: {"groupName": groupName, "participants": participants},
+      );
+
+      if (response.statusCode == 201) {
+        return response.data; // Retorna el grupo recién creado
+      } else {
+        print("Error al crear grupo: ${response.data}");
+        return null;
+      }
+    } catch (e) {
+      print("Error al crear grupo: $e");
+      throw Exception("No se pudo crear el grupo.");
+    }
+  }
+
+/*
+  static Future<dynamic> createGroup({
+    required String groupName,
+    required List<String> participants,
+  }) async {
+    try {
+      final response = await _dio.post(
+        "/createGroup",
+        data: {"groupName": groupName, "participants": participants},
+      );
+
+      return response.data; // Retornar la respuesta del backend
+    } catch (e) {
+      print("Error al crear grupo: $e");
+      throw Exception("No se pudo crear el grupo.");
+    }
+  }
+
+  */
 }
