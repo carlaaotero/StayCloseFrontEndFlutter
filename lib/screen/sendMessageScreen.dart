@@ -52,7 +52,7 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
 
   Future<void> _connectToSocket() async {
     _socket = IO.io(
-      'http://127.0.0.1:3000',
+      'http://147.83.7.155:3000',
       IO.OptionBuilder()
           .setTransports(['websocket'])
           .disableAutoConnect()
@@ -130,7 +130,7 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
       };
 
       setState(() {
-        //_messages.add(newMessage);
+        _messages.add(newMessage);
       });
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -158,11 +158,11 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
 
   Future<void> _sendLocation() async {
     try {
-      Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+      // Usa coordenadas fijas en lugar de obtener la posición del dispositivo
+      double latitude = 41.2754704187056;
+      double longitude = 1.9865948438739107;
 
-      String locationMessage =
-          'location:${position.latitude},${position.longitude}';
+      String locationMessage = 'location:$latitude,$longitude';
 
       await MessageService.sendMessage(
         chatId: widget.chatId,
@@ -170,27 +170,18 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
         receiverUsername: widget.receiverUsername,
         content: locationMessage,
       );
-      // Escoltar canvis de posició
-      _positionStreamSubscription = Geolocator.getPositionStream(
-          locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 3, // Només actualitzar si es mou més de 10 metres
-      )).listen((Position position) {
-        // Enviar la ubicació al servidor
-        String locationMessage =
-            'location:${position.latitude},${position.longitude}';
 
-        _socket.emit('sendLocation', {
-          'chatId': widget.chatId,
-          'sender': Get.find<UserController>().currentUserName.value,
-          'content': locationMessage,
-        });
-
-        print('Ubicació enviada: $locationMessage');
+      // Enviar las coordenadas fijas a través del socket
+      _socket.emit('sendLocation', {
+        'chatId': widget.chatId,
+        'sender': Get.find<UserController>().currentUserName.value,
+        'content': locationMessage,
       });
+
+      print('Ubicació enviada: $locationMessage');
     } catch (e) {
       print('Error al obtener la ubicación: $e');
-      Get.snackbar('Error', 'No se pudo obtener la ubicación');
+      Get.snackbar('Error', 'No se pudo enviar la ubicación');
     }
   }
 
@@ -200,45 +191,41 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
       String? homeAddress = await _userService.getHomeUser(currentUsername);
 
       if (homeAddress != null) {
-        // Obtener coordenadas de la dirección de casa
+        // Obtener coordenadas reales de la dirección de casa
         Map<String, double> homeCoordinates =
             await _ubiController.getCoordinatesFromAddress(homeAddress);
-        print('estas son mis coordenadas de casa: $homeCoordinates');
-        // Enviar mensaje "Me dirijo a casa"
+        print('Estas son mis coordenadas de casa: $homeCoordinates');
+
+        // Enviar mensaje inicial "Me dirijo a casa"
         await MessageService.sendMessage(
           chatId: widget.chatId,
           senderUsername: currentUsername,
           receiverUsername: widget.receiverUsername,
           content: 'Me dirijo a casa',
         );
-        print('Comparo distancia');
-        // Comprobar la ubicación continuamente
-        _positionStreamSubscription = Geolocator.getPositionStream(
-          locationSettings: LocationSettings(
-            accuracy: LocationAccuracy.high,
-            distanceFilter: 10,
-          ),
-        ).listen((Position position) async {
-          double distanceInMeters = Geolocator.distanceBetween(
-            position.latitude,
-            position.longitude,
-            homeCoordinates['latitude']!,
-            homeCoordinates['longitude']!,
-          );
-          print('La distancia en metros es: $distanceInMeters');
-          if (distanceInMeters < 200) {
-            // Enviar mensaje "Ya estoy en casa" cuando se detecta que el usuario ha llegado a casa
-            await MessageService.sendMessage(
-              chatId: widget.chatId,
-              senderUsername: currentUsername,
-              receiverUsername: widget.receiverUsername,
-              content: 'Ya estoy en casa',
-            );
 
-            // Cancelar la suscripción al stream de ubicación
-            _positionStreamSubscription?.cancel();
-          }
-        });
+        // Usar coordenadas fijas en lugar de la posición del dispositivo
+        double fixedLatitude = 41.2754704187056;
+        double fixedLongitude = 1.9865948438739107;
+
+        // Comparar continuamente usando las coordenadas fijas
+        double distanceInMeters = Geolocator.distanceBetween(
+          fixedLatitude,
+          fixedLongitude,
+          homeCoordinates['latitude']!,
+          homeCoordinates['longitude']!,
+        );
+
+        print('La distancia en metros es: $distanceInMeters');
+        if (distanceInMeters < 200) {
+          // Enviar mensaje "Ya estoy en casa" cuando las coordenadas fijas están cerca
+          await MessageService.sendMessage(
+            chatId: widget.chatId,
+            senderUsername: currentUsername,
+            receiverUsername: widget.receiverUsername,
+            content: 'Ya estoy en casa',
+          );
+        }
       } else {
         Get.snackbar('Error', 'No se pudo obtener la dirección de casa');
       }
