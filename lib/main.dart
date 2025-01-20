@@ -15,14 +15,21 @@ import 'package:cloudinary_flutter/cloudinary_context.dart';
 import 'package:cloudinary_url_gen/cloudinary.dart';
 import 'package:flutter_application_1/screen/calendarScreen.dart'; 
 import 'package:flutter_application_1/services/backgroundServices.dart';
-
+import 'package:flutter/material.dart';
 
 void main() async {
+
+  
+  WidgetsFlutterBinding.ensureInitialized();
+  // Logs per depuració
+  debugPrint('Comprovant permisos i inicialitzant BackgroundService...');
+  await BackgroundService.initialize().catchError((e) {
+    debugPrint('Error inicialitzant el servei de segon pla: $e');
+  });
+
   CloudinaryContext.cloudinary = Cloudinary.fromCloudName(cloudName: "djen7vqby");
   Get.put(UserController());  // Esto asegura que el controlador se ponga en el GetX 'depósito'
-
-  // Inicialitzar el servei en segon pla i el treball
-  await BackgroundService.initialize();
+  
 
   runApp(
     MyApp(),
