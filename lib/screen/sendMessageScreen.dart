@@ -8,6 +8,7 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import '../controllers/ubiController.dart';
 
 class SendMessageScreen extends StatefulWidget {
   final String receiverUsername;
@@ -30,6 +31,10 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
   final List<Map<String, dynamic>> _messages = [];
   late IO.Socket _socket;
   StreamSubscription<Position>? _positionStreamSubscription;
+  final UserService _userService = UserService(); // Instanciar UserService
+  final UbiController _ubiController =
+      UbiController(); // Instanciar UbiController
+
 
   @override
   void initState() {
@@ -174,6 +179,63 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
     }
   }
 
+    Future<void> _sendHomeStatus() async {
+    try {
+      String currentUsername = Get.find<UserController>().currentUserName.value;
+      String? homeAddress = await _userService.getHomeUser(currentUsername);
+      print('La meva direcció de casa es: $homeAddress');
+      if (homeAddress != null) {
+        // Obtener coordenadas de la dirección de casa
+        Map<String, double> homeCoordinates =
+            await _ubiController.getCoordinatesFromAddress(homeAddress);
+        print('Les meves coordenades de casa son: $homeCoordinates');
+        // Enviar mensaje "Me dirijo a casa"
+        await MessageService.sendMessage(
+          chatId: widget.chatId,
+          senderUsername: currentUsername,
+          receiverUsername: widget.receiverUsername,
+          content: 'Me dirijo a casa',
+        );
+
+        // Comprobar la ubicación continuamente
+        _positionStreamSubscription = Geolocator.getPositionStream(
+          locationSettings: LocationSettings(
+            accuracy: LocationAccuracy.high,
+            distanceFilter: 10,
+          ),
+        ).listen((Position position) async {
+          double distanceInMeters = Geolocator.distanceBetween(
+            position.latitude,
+            position.longitude,
+            homeCoordinates['latitude']!,
+            homeCoordinates['longitude']!,
+          );
+          print('La destancia fins a casa meva es: $distanceInMeters');
+
+          if (distanceInMeters < 100) {
+            // Enviar mensaje "Ya estoy en casa" cuando se detecta que el usuario ha llegado a casa
+            await MessageService.sendMessage(
+              chatId: widget.chatId,
+              senderUsername: currentUsername,
+              receiverUsername: widget.receiverUsername,
+              content: 'Ya estoy en casa',
+            );
+
+            // Cancelar la suscripción al stream de ubicación
+            _positionStreamSubscription?.cancel();
+          }
+        });
+      } else {
+        Get.snackbar('Error', 'No se pudo obtener la dirección de casa');
+      }
+    } catch (e) {
+      print('Error al obtener la dirección de casa: $e');
+      Get.snackbar('Error', 'No se pudo obtener la dirección de casa');
+    }
+  }
+
+
+
   Widget _buildMessage(Map<String, dynamic> message, bool isSender) {
     final content = message['content'];
     if (content.startsWith('location:')) {
@@ -244,6 +306,15 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
                 onTap: () {
                   Navigator.pop(context);
                   _sendLocation();
+                },
+              ),
+                _buildAttachmentOption(
+                context,
+                icon: Icons.home,
+                label: 'En Casa',
+                onTap: () {
+                  Navigator.pop(context);
+                  _sendHomeStatus();
                 },
               ),
             ],
