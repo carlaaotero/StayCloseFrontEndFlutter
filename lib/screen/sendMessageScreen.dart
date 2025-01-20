@@ -130,7 +130,7 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
       };
 
       setState(() {
-        //_messages.add(newMessage);
+        _messages.add(newMessage);
       });
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
