@@ -35,7 +35,6 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
   final UbiController _ubiController =
       UbiController(); // Instanciar UbiController
 
-
   @override
   void initState() {
     super.initState();
@@ -131,7 +130,7 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
       };
 
       setState(() {
-        _messages.add(newMessage);
+        //_messages.add(newMessage);
       });
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -172,11 +171,11 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
         content: locationMessage,
       );
       // Escoltar canvis de posició
-        _positionStreamSubscription =
-          Geolocator.getPositionStream(locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.high,
-            distanceFilter: 3, // Només actualitzar si es mou més de 10 metres
-          )).listen((Position position) {
+      _positionStreamSubscription = Geolocator.getPositionStream(
+          locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 3, // Només actualitzar si es mou més de 10 metres
+      )).listen((Position position) {
         // Enviar la ubicació al servidor
         String locationMessage =
             'location:${position.latitude},${position.longitude}';
@@ -187,9 +186,8 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
           'content': locationMessage,
         });
 
-          print('Ubicació enviada: $locationMessage');
-        });
-
+        print('Ubicació enviada: $locationMessage');
+      });
     } catch (e) {
       print('Error al obtener la ubicación: $e');
       Get.snackbar('Error', 'No se pudo obtener la ubicación');
@@ -249,8 +247,6 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
       Get.snackbar('Error', 'No se pudo obtener la dirección de casa');
     }
   }
-
-
 
   Widget _buildMessage(Map<String, dynamic> message, bool isSender) {
     final content = message['content'];
@@ -324,7 +320,7 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
                   _sendLocation();
                 },
               ),
-                _buildAttachmentOption(
+              _buildAttachmentOption(
                 context,
                 icon: Icons.home,
                 label: 'En Casa',
